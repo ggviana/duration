@@ -40,6 +40,14 @@
   ],
   "author": "Guilherme Guimarães <ggviana@hotmail.com.br> (https://ggviana.net)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ggviana/duration.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ggviana/duration/issues"
+  },
+  "homepage": "https://github.com/ggviana/duration#readme",
   "engines": {
     "node": ">=18.0.0"
   },
