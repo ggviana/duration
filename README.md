@@ -3,7 +3,7 @@
 A lightweight, fully-typed TypeScript library for working with time durations. Create, manipulate, and format durations with an intuitive, immutable API.
 
 ```typescript
-import Duration from 'duration'
+import Duration from '@ggviana.eth/duration'
 
 const timer = Duration.fromMinutes(5).and(30, 'seconds')
 console.log(timer.toString())  // PT5M30S
@@ -27,13 +27,13 @@ console.log(extended.toMinutes())  // 6 minutes
 ## Installation
 
 ```bash
-npm install duration
+npm install @ggviana.eth/duration
 ```
 
 ## Quick Start
 
 ```typescript
-import Duration from 'duration'
+import Duration from '@ggviana.eth/duration'
 
 // Create durations
 const d1 = Duration.fromHours(2)
@@ -384,7 +384,7 @@ import Duration, {
   DurationLike,
   TimeUnit,
   DurationInput
-} from 'duration'
+} from '@ggviana.eth/duration'
 ```
 
 ### Type Definitions
