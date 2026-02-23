@@ -1,6 +1,6 @@
 {
   "name": "@ggviana.eth/duration",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Type-safe duration handling in TypeScript. Parse ISO 8601 strings, perform arithmetic, compare durations, and convert between units. Accepts numbers, objects, or strings. Immutable, zero dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
