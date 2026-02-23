@@ -404,6 +404,15 @@ export default class Duration {
   }
 
   /**
+   * Returns the primitive value of the duration in milliseconds.
+   * Enables implicit numeric coercion (e.g., duration + 5000, +duration).
+   * @returns {number}
+   */
+  valueOf (): number {
+    return this.#milliseconds
+  }
+
+  /**
    * Convert the instance to total seconds.
    * @returns {number}
    */

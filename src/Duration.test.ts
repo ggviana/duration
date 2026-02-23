@@ -550,6 +550,61 @@ describe('Duration', () => {
       })
     })
 
+    describe('valueOf()', () => {
+      it('should support unary + coercion', () => {
+        const duration = Duration.fromSeconds(5)
+        expect(+duration).toBe(5000)
+      })
+
+      it('should support Number() cast', () => {
+        const duration = Duration.fromSeconds(5)
+        expect(Number(duration)).toBe(5000)
+      })
+
+      it('should support addition with a number', () => {
+        const duration = Duration.fromSeconds(5)
+        expect(duration + 5000).toBe(10000)
+      })
+
+      it('should support subtraction between two Durations', () => {
+        const d1 = Duration.fromSeconds(2)
+        const d2 = Duration.fromSeconds(5)
+        expect(d2 - d1).toBe(3000)
+      })
+
+      it('should support multiplication by a number', () => {
+        const duration = Duration.fromSeconds(5)
+        expect(duration * 2).toBe(10000)
+      })
+
+      it('should support numeric comparison with >', () => {
+        const d5s = Duration.fromSeconds(5)
+        const d3s = Duration.fromSeconds(3)
+        expect(d5s > d3s).toBe(true)
+      })
+
+      it('should work with Math.max()', () => {
+        const d1 = Duration.fromSeconds(2)
+        const d2 = Duration.fromSeconds(5)
+        expect(Math.max(d1, d2)).toBe(5000)
+      })
+
+      it('should work with Math.min()', () => {
+        const d1 = Duration.fromSeconds(2)
+        const d2 = Duration.fromSeconds(5)
+        expect(Math.min(d1, d2)).toBe(2000)
+      })
+
+      it('should support Date arithmetic', () => {
+        const duration = Duration.fromSeconds(5)
+        expect(new Date(0 + duration)).toEqual(new Date(5000))
+      })
+
+      it('should return 0 for zero duration', () => {
+        expect(+Duration.fromMilliseconds(0)).toBe(0)
+      })
+    })
+
     describe('toSeconds()', () => {
       it('should return total seconds with truncation', () => {
         const d = Duration.fromMilliseconds(5500)
