@@ -413,6 +413,18 @@ export default class Duration {
   }
 
   /**
+   * Controls primitive coercion based on the hint.
+   * - 'string': returns ISO 8601 string (e.g., "PT2S")
+   * - 'number' / 'default': returns total milliseconds
+   * @param {'number'|'string'|'default'} hint - The coercion hint.
+   * @returns {number|string}
+   */
+  [Symbol.toPrimitive] (hint: string): number | string {
+    if (hint === 'string') return this.toString()
+    return this.#milliseconds
+  }
+
+  /**
    * Convert the instance to total seconds.
    * @returns {number}
    */
