@@ -33,7 +33,7 @@ type IntlDurationFormatCtor = new (
 
 export default class Duration {
   /* Private field holding milliseconds */
-  #milliseconds: number
+  readonly #milliseconds: number
 
   static readonly Units = {
     Millisecond: 1,
@@ -352,16 +352,6 @@ export default class Duration {
   }
 
   /**
-   * Compare this duration with another.
-   * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
-   * @returns {number} Negative if less, 0 if equal, positive if greater.
-   * @private
-   */
-  #compare (other: DurationInput): number {
-    return this.toMilliseconds() - Duration.toDuration(other).toMilliseconds()
-  }
-
-  /**
    * Check equality with another duration.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {boolean} True if equal.
@@ -419,27 +409,6 @@ export default class Duration {
    * @returns {number}
    */
   toMilliseconds (): number {
-    return this.#milliseconds
-  }
-
-  /**
-   * Returns the primitive value of the duration in milliseconds.
-   * Enables implicit numeric coercion (e.g., duration + 5000, +duration).
-   * @returns {number}
-   */
-  valueOf (): number {
-    return this.#milliseconds
-  }
-
-  /**
-   * Controls primitive coercion based on the hint.
-   * - 'string': returns ISO 8601 string (e.g., "PT2S")
-   * - 'number' / 'default': returns total milliseconds
-   * @param {'number'|'string'|'default'} hint - The coercion hint.
-   * @returns {number|string}
-   */
-  [Symbol.toPrimitive] (hint: string): number | string {
-    if (hint === 'string') return this.toString()
     return this.#milliseconds
   }
 
@@ -510,6 +479,33 @@ export default class Duration {
     return this.toObject()
   }
 
+  /**
+   * Return ISO 8601 duration string.
+   * @returns {string}
+   */
+  toString (): string {
+    const { weeks, days, hours, milliseconds, minutes, seconds } = this.toObject()
+
+    // Handle zero duration specially
+    if (weeks === 0 && days === 0 && hours === 0 && minutes === 0 && seconds === 0 && milliseconds === 0) {
+      return 'PT0S'
+    }
+
+    // Convert weeks to days for ISO 8601 (standard practice)
+    const totalDays = weeks * 7 + days
+
+    let str = 'P'
+    if (totalDays) str += `${totalDays}D`
+    if (hours || minutes || seconds || milliseconds) str += 'T'
+    if (hours) str += `${hours}H`
+    if (minutes) str += `${minutes}M`
+    if (seconds || milliseconds) {
+      const sec = seconds + milliseconds / 1000
+      str += `${sec}S`
+    }
+    return str
+  }
+
   toLocaleString (locale?: string | string[], options?: DurationFormatOptions): string {
     const obj = this.toObject()
     const Ctor = (Intl as { DurationFormat?: IntlDurationFormatCtor }).DurationFormat
@@ -529,6 +525,37 @@ export default class Duration {
     add(obj.seconds, 'second', 'seconds')
     add(obj.milliseconds, 'millisecond', 'milliseconds')
     return parts.length > 0 ? parts.join(', ') : '0 seconds'
+  }
+
+  /**
+   * Compare this duration with another.
+   * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
+   * @returns {number} Negative if less, 0 if equal, positive if greater.
+   * @private
+   */
+  #compare (other: DurationInput): number {
+    return this.toMilliseconds() - Duration.toDuration(other).toMilliseconds()
+  }
+
+  /**
+   * Returns the primitive value of the duration in milliseconds.
+   * Enables implicit numeric coercion (e.g., duration + 5000, +duration).
+   * @returns {number}
+   */
+  valueOf (): number {
+    return this.#milliseconds
+  }
+
+  /**
+   * Controls primitive coercion based on the hint.
+   * - 'string': returns ISO 8601 string (e.g., "PT2S")
+   * - 'number' / 'default': returns total milliseconds
+   * @param {'number'|'string'|'default'} hint - The coercion hint.
+   * @returns {number|string}
+   */
+  [Symbol.toPrimitive] (hint: string): number | string {
+    if (hint === 'string') return this.toString()
+    return this.#milliseconds
   }
 
   * [Symbol.iterator] (): Generator<number> {
@@ -561,32 +588,5 @@ export default class Duration {
 
     const duration = parts.length > 0 ? parts.join(' ') : '0s'
     return `Duration { ${duration} }`
-  }
-
-  /**
-   * Return ISO 8601 duration string.
-   * @returns {string}
-   */
-  toString (): string {
-    const { weeks, days, hours, milliseconds, minutes, seconds } = this.toObject()
-
-    // Handle zero duration specially
-    if (weeks === 0 && days === 0 && hours === 0 && minutes === 0 && seconds === 0 && milliseconds === 0) {
-      return 'PT0S'
-    }
-
-    // Convert weeks to days for ISO 8601 (standard practice)
-    const totalDays = weeks * 7 + days
-
-    let str = 'P'
-    if (totalDays) str += `${totalDays}D`
-    if (hours || minutes || seconds || milliseconds) str += 'T'
-    if (hours) str += `${hours}H`
-    if (minutes) str += `${minutes}M`
-    if (seconds || milliseconds) {
-      const sec = seconds + milliseconds / 1000
-      str += `${sec}S`
-    }
-    return str
   }
 }
