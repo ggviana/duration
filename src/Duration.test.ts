@@ -865,6 +865,61 @@ describe('Duration', () => {
     })
   })
 
+  describe('[Symbol.iterator]()', () => {
+    it('should yield 6 values matching toObject() in order', () => {
+      const d = Duration.fromWeeks(1).and(2, 'days').and(3, 'hours').and(4, 'minutes').and(5, 'seconds').add(6)
+      const [weeks, days, hours, minutes, seconds, ms] = d
+      const obj = d.toObject()
+      expect(weeks).toBe(obj.weeks)
+      expect(days).toBe(obj.days)
+      expect(hours).toBe(obj.hours)
+      expect(minutes).toBe(obj.minutes)
+      expect(seconds).toBe(obj.seconds)
+      expect(ms).toBe(obj.milliseconds)
+    })
+
+    it('should yield 6 zeros for zero duration', () => {
+      const d = new Duration(0)
+      const values = [...d]
+      expect(values).toEqual([0, 0, 0, 0, 0, 0])
+    })
+
+    it('spread should have length 6', () => {
+      const d = Duration.fromHours(2).and(30, 'minutes')
+      expect([...d]).toHaveLength(6)
+    })
+
+    it('values should match toObject()', () => {
+      const d = Duration.fromHours(2).and(30, 'minutes').and(15, 'seconds')
+      const [weeks, days, hours, minutes, seconds, ms] = d
+      const obj = d.toObject()
+      expect([weeks, days, hours, minutes, seconds, ms]).toEqual([
+        obj.weeks, obj.days, obj.hours, obj.minutes, obj.seconds, obj.milliseconds
+      ])
+    })
+
+    it('should support partial destructuring with skips', () => {
+      const d = Duration.fromHours(2).and(30, 'minutes')
+      const [, , hours, minutes] = d
+      expect(hours).toBe(2)
+      expect(minutes).toBe(30)
+    })
+
+    it('should support for...of iteration', () => {
+      const d = Duration.fromHours(1)
+      const values: number[] = []
+      for (const v of d) values.push(v)
+      expect(values).toHaveLength(6)
+      expect(values.every(v => typeof v === 'number')).toBe(true)
+    })
+
+    it('Array.from() should produce a length-6 array', () => {
+      const d = Duration.fromMinutes(90)
+      const arr = Array.from(d)
+      expect(arr).toHaveLength(6)
+    })
+  })
+
   describe('Edge Cases', () => {
     it('should handle zero duration', () => {
       const d = new Duration(0)

@@ -531,6 +531,16 @@ export default class Duration {
     return parts.length > 0 ? parts.join(', ') : '0 seconds'
   }
 
+  * [Symbol.iterator] (): Generator<number> {
+    const { weeks, days, hours, minutes, seconds, milliseconds } = this.toObject()
+    yield weeks
+    yield days
+    yield hours
+    yield minutes
+    yield seconds
+    yield milliseconds
+  }
+
   /**
    * Custom inspect for console.log() output.
    * @returns {string} Human-readable duration string (e.g., "Duration { 2w 3d 5h 30m }")
