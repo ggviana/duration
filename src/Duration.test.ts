@@ -298,6 +298,43 @@ describe('Duration', () => {
         expect(d1.toMilliseconds()).toBe(d2.toMilliseconds())
       })
     })
+
+    describe('between()', () => {
+      it('should return duration for a before b', () => {
+        const a = new Date('2024-01-01T00:00:00Z')
+        const b = new Date('2024-01-01T01:00:00Z')
+        expect(Duration.between(a, b).toMilliseconds()).toBe(3600000)
+      })
+
+      it('should return same duration for b before a (commutative)', () => {
+        const a = new Date('2024-01-01T00:00:00Z')
+        const b = new Date('2024-01-01T01:00:00Z')
+        expect(Duration.between(a, b).toMilliseconds()).toBe(Duration.between(b, a).toMilliseconds())
+      })
+
+      it('should return zero for identical dates', () => {
+        const d = new Date('2024-01-01T00:00:00Z')
+        expect(Duration.between(d, d).toMilliseconds()).toBe(0)
+      })
+
+      it('should handle 1-day difference', () => {
+        const a = new Date('2024-01-01T00:00:00Z')
+        const b = new Date('2024-01-02T00:00:00Z')
+        expect(Duration.between(a, b).toDays()).toBe(1)
+      })
+
+      it('should handle millisecond precision', () => {
+        const a = new Date(0)
+        const b = new Date(123)
+        expect(Duration.between(a, b).toMilliseconds()).toBe(123)
+      })
+
+      it('should return a Duration instance', () => {
+        const a = new Date(0)
+        const b = new Date(1000)
+        expect(Duration.between(a, b)).toBeInstanceOf(Duration)
+      })
+    })
   })
 
   describe('Arithmetic Methods', () => {

@@ -203,6 +203,16 @@ export default class Duration {
   }
 
   /**
+   * Create a Duration representing the absolute difference between two dates.
+   * @param {Date} a - First date.
+   * @param {Date} b - Second date.
+   * @returns {Duration}
+   */
+  static between (a: Date, b: Date): Duration {
+    return new Duration(Math.abs(b.getTime() - a.getTime()))
+  }
+
+  /**
    * Return the smaller of two durations.
    * @param {Duration|Object|number} a
    * @param {Duration|Object|number} b
