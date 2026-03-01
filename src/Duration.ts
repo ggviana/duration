@@ -22,6 +22,15 @@ export interface DurationLike {
 // Duration constructor input type
 export type DurationInput = number | string | Duration | Partial<DurationLike>
 
+interface DurationFormatOptions {
+  style?: 'long' | 'short' | 'narrow' | 'digital'
+  localeMatcher?: 'best fit' | 'lookup'
+}
+type IntlDurationFormatCtor = new (
+  locale?: string | string[],
+  options?: DurationFormatOptions
+) => { format(duration: Partial<DurationLike>): string }
+
 export default class Duration {
   /* Private field holding milliseconds */
   #milliseconds: number
@@ -489,6 +498,27 @@ export default class Duration {
    */
   toJSON (): DurationLike {
     return this.toObject()
+  }
+
+  toLocaleString (locale?: string | string[], options?: DurationFormatOptions): string {
+    const obj = this.toObject()
+    const Ctor = (Intl as { DurationFormat?: IntlDurationFormatCtor }).DurationFormat
+    if (typeof Ctor === 'function') {
+      return new Ctor(locale, options).format(obj)
+    }
+    // English-only fallback
+    const parts: string[] = []
+    const add = (value: number, singular: string, plural: string) => {
+      if (value === 0) return
+      parts.push(`${value} ${value === 1 ? singular : plural}`)
+    }
+    add(obj.weeks, 'week', 'weeks')
+    add(obj.days, 'day', 'days')
+    add(obj.hours, 'hour', 'hours')
+    add(obj.minutes, 'minute', 'minutes')
+    add(obj.seconds, 'second', 'seconds')
+    add(obj.milliseconds, 'millisecond', 'milliseconds')
+    return parts.length > 0 ? parts.join(', ') : '0 seconds'
   }
 
   /**

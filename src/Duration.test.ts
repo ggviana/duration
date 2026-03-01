@@ -753,6 +753,50 @@ describe('Duration', () => {
       })
     })
 
+    describe('toLocaleString()', () => {
+      it('should return a non-empty string', () => {
+        const d = Duration.fromHours(2).and(30, 'minutes')
+        expect(d.toLocaleString()).toBeTruthy()
+      })
+
+      it('should include numeric component values in output', () => {
+        const d = Duration.fromHours(2).and(30, 'minutes')
+        const result = d.toLocaleString()
+        expect(result).toContain('2')
+        expect(result).toContain('30')
+      })
+
+      it('should accept locale and options without throwing', () => {
+        const d = Duration.fromMinutes(90)
+        expect(() => d.toLocaleString('en-US', { style: 'long' })).not.toThrow()
+        expect(() => d.toLocaleString(['en', 'fr'], { style: 'short' })).not.toThrow()
+      })
+
+      it('fallback: should format as "2 hours, 30 minutes"', () => {
+        const saved = (Intl as any).DurationFormat
+        delete (Intl as any).DurationFormat
+        const d = Duration.fromHours(2).and(30, 'minutes')
+        expect(d.toLocaleString()).toBe('2 hours, 30 minutes')
+        if (saved !== undefined) (Intl as any).DurationFormat = saved
+      })
+
+      it('fallback: should use singular for value of 1', () => {
+        const saved = (Intl as any).DurationFormat
+        delete (Intl as any).DurationFormat
+        expect(Duration.fromHours(1).toLocaleString()).toBe('1 hour')
+        expect(Duration.fromMinutes(1).toLocaleString()).toBe('1 minute')
+        expect(Duration.fromSeconds(1).toLocaleString()).toBe('1 second')
+        if (saved !== undefined) (Intl as any).DurationFormat = saved
+      })
+
+      it('fallback: zero duration returns "0 seconds"', () => {
+        const saved = (Intl as any).DurationFormat
+        delete (Intl as any).DurationFormat
+        expect(new Duration(0).toLocaleString()).toBe('0 seconds')
+        if (saved !== undefined) (Intl as any).DurationFormat = saved
+      })
+    })
+
     describe('[inspect.custom]()', () => {
       it('should return human-readable format', () => {
         const d = Duration.fromMinutes(5).and(30, 'seconds')
