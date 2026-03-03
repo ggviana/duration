@@ -9,6 +9,7 @@ export default class Duration {
   /* Private field holding milliseconds */
   readonly #milliseconds: number
 
+  /** Millisecond values for each supported time unit. */
   static readonly Units = {
     Millisecond: 1,
     Second: 1000,
@@ -480,6 +481,13 @@ export default class Duration {
     return str
   }
 
+  /**
+   * Format the duration as a locale-aware string using `Intl.DurationFormat` when available,
+   * falling back to an English representation otherwise.
+   * @param {string|string[]} [locale] - BCP 47 locale tag(s) passed to `Intl.DurationFormat`.
+   * @param {DurationFormatOptions} [options] - Formatting options passed to `Intl.DurationFormat`.
+   * @returns {string} e.g. "1 hour, 30 minutes" or "1 hour and 30 minutes" depending on locale.
+   */
   toLocaleString (locale?: string | string[], options?: DurationFormatOptions): string {
     const obj = this.toObject()
     const Ctor = (Intl as { DurationFormat?: IntlDurationFormatCtor }).DurationFormat
@@ -522,6 +530,11 @@ export default class Duration {
     return this.toMilliseconds() - Duration.toDuration(other).toMilliseconds()
   }
 
+  /**
+   * English-only fallback for toLocaleString() when `Intl.DurationFormat` is unavailable.
+   * @param {DurationLike} obj - Pre-computed duration breakdown.
+   * @returns {string} e.g. "1 hour, 30 minutes"
+   */
   #toLocaleStringFallback (obj: DurationLike): string {
     const parts: string[] = []
     const add = (value: number, singular: string, plural: string) => {
@@ -563,6 +576,11 @@ export default class Duration {
     return this.toConsole()
   }
 
+  /**
+   * Iterate over duration components in order: weeks, days, hours, minutes, seconds, milliseconds.
+   * Enables destructuring: `const [weeks, days, hours, minutes, seconds, ms] = duration`.
+   * @yields {number}
+   */
   * [Symbol.iterator] (): Generator<number> {
     const { weeks, days, hours, minutes, seconds, milliseconds } = this.toObject()
     yield weeks
