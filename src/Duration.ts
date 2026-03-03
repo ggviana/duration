@@ -486,19 +486,7 @@ export default class Duration {
     if (typeof Ctor === 'function') {
       return new Ctor(locale, options).format(obj)
     }
-    // English-only fallback
-    const parts: string[] = []
-    const add = (value: number, singular: string, plural: string) => {
-      if (value === 0) return
-      parts.push(`${value} ${value === 1 ? singular : plural}`)
-    }
-    add(obj.weeks, 'week', 'weeks')
-    add(obj.days, 'day', 'days')
-    add(obj.hours, 'hour', 'hours')
-    add(obj.minutes, 'minute', 'minutes')
-    add(obj.seconds, 'second', 'seconds')
-    add(obj.milliseconds, 'millisecond', 'milliseconds')
-    return parts.length > 0 ? parts.join(', ') : '0 seconds'
+    return this.#toLocaleStringFallback(obj)
   }
 
   /**
@@ -532,6 +520,21 @@ export default class Duration {
    */
   #compare (other: DurationInput): number {
     return this.toMilliseconds() - Duration.toDuration(other).toMilliseconds()
+  }
+
+  #toLocaleStringFallback (obj: DurationLike): string {
+    const parts: string[] = []
+    const add = (value: number, singular: string, plural: string) => {
+      if (value === 0) return
+      parts.push(`${value} ${value === 1 ? singular : plural}`)
+    }
+    add(obj.weeks, 'week', 'weeks')
+    add(obj.days, 'day', 'days')
+    add(obj.hours, 'hour', 'hours')
+    add(obj.minutes, 'minute', 'minutes')
+    add(obj.seconds, 'second', 'seconds')
+    add(obj.milliseconds, 'millisecond', 'milliseconds')
+    return parts.length > 0 ? parts.join(', ') : '0 seconds'
   }
 
   /**
