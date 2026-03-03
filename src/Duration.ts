@@ -1,5 +1,3 @@
-import { inspect } from 'node:util'
-
 // Time unit type for type-safe unit parameters
 export type TimeUnit =
   | 'millisecond' | 'milliseconds'
@@ -26,6 +24,7 @@ interface DurationFormatOptions {
   style?: 'long' | 'short' | 'narrow' | 'digital'
   localeMatcher?: 'best fit' | 'lookup'
 }
+
 type IntlDurationFormatCtor = new (
   locale?: string | string[],
   options?: DurationFormatOptions
@@ -528,6 +527,29 @@ export default class Duration {
   }
 
   /**
+   * Returns a human-readable string for console output.
+   * Works in both Node.js and browsers.
+   * @returns e.g. "Duration { 2w 3d 5h 30m }"
+   */
+  toConsole (): string {
+    const { weeks, days, hours, minutes, seconds, milliseconds } = this.toObject()
+
+    const parts: string[] = []
+
+    if (weeks > 0) parts.push(`${weeks}w`)
+    if (days > 0) parts.push(`${days}d`)
+    if (hours > 0) parts.push(`${hours}h`)
+    if (minutes > 0) parts.push(`${minutes}m`)
+    if (seconds > 0 || milliseconds > 0) {
+      const totalSeconds = seconds + milliseconds / 1000
+      parts.push(`${totalSeconds}s`)
+    }
+
+    const duration = parts.length > 0 ? parts.join(' ') : '0s'
+    return `Duration { ${duration} }`
+  }
+
+  /**
    * Compare this duration with another.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {number} Negative if less, 0 if equal, positive if greater.
@@ -558,6 +580,11 @@ export default class Duration {
     return this.#milliseconds
   }
 
+  /** Node.js console.log() hook — delegates to toConsole(). */
+  [Symbol.for('nodejs.util.inspect.custom')] (): string {
+    return this.toConsole()
+  }
+
   * [Symbol.iterator] (): Generator<number> {
     const { weeks, days, hours, minutes, seconds, milliseconds } = this.toObject()
     yield weeks
@@ -566,27 +593,5 @@ export default class Duration {
     yield minutes
     yield seconds
     yield milliseconds
-  }
-
-  /**
-   * Custom inspect for console.log() output.
-   * @returns {string} Human-readable duration string (e.g., "Duration { 2w 3d 5h 30m }")
-   */
-  [inspect.custom] (): string {
-    const { weeks, days, hours, minutes, seconds, milliseconds } = this.toObject()
-
-    const parts: string[] = []
-
-    if (weeks > 0) parts.push(`${weeks}w`)
-    if (days > 0) parts.push(`${days}d`)
-    if (hours > 0) parts.push(`${hours}h`)
-    if (minutes > 0) parts.push(`${minutes}m`)
-    if (seconds > 0 || milliseconds > 0) {
-      const totalSeconds = seconds + milliseconds / 1000
-      parts.push(`${totalSeconds}s`)
-    }
-
-    const duration = parts.length > 0 ? parts.join(' ') : '0s'
-    return `Duration { ${duration} }`
   }
 }
