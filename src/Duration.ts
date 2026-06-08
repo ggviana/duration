@@ -646,6 +646,21 @@ export default class Duration {
   }
 
   /**
+   * Return the ratio of this duration to another (this / other).
+   * @param {Duration|Object|number} other - The reference duration.
+   * @returns {number} Fractional ratio, e.g. 0.5 if this is half of other.
+   * @throws {RangeError} If other is zero.
+   * @example
+   * Duration.fromMinutes(30).ratio(Duration.fromHours(1))    // 0.5
+   * Duration.fromSeconds(45).ratio(Duration.fromMinutes(1))  // 0.75
+   */
+  ratio (other: DurationInput): number {
+    const otherMs = Duration.toDuration(other).toMilliseconds()
+    if (otherMs === 0) throw new RangeError('Cannot compute ratio against a zero duration')
+    return this.#milliseconds / otherMs
+  }
+
+  /**
    * Compare this duration with another.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {number} Negative if less, 0 if equal, positive if greater.

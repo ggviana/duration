@@ -1115,6 +1115,32 @@ describe('Duration', () => {
     })
   })
 
+  describe('ratio()', () => {
+    it('should return 0.5 when this is half of other', () => {
+      expect(Duration.fromMinutes(30).ratio(Duration.fromHours(1))).toBe(0.5)
+    })
+
+    it('should return 0.75 for 45s / 1m', () => {
+      expect(Duration.fromSeconds(45).ratio(Duration.fromMinutes(1))).toBe(0.75)
+    })
+
+    it('should return 1 when equal', () => {
+      expect(Duration.fromMinutes(5).ratio(Duration.fromMinutes(5))).toBe(1)
+    })
+
+    it('should return greater than 1 when this is larger', () => {
+      expect(Duration.fromMinutes(10).ratio(Duration.fromMinutes(5))).toBe(2)
+    })
+
+    it('should throw RangeError for zero other', () => {
+      expect(() => Duration.fromMinutes(5).ratio(new Duration(0))).toThrow(RangeError)
+    })
+
+    it('should accept raw milliseconds', () => {
+      expect(Duration.fromSeconds(1).ratio(2000)).toBe(0.5)
+    })
+  })
+
   describe('Edge Cases', () => {
     it('should handle zero duration', () => {
       const d = new Duration(0)

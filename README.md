@@ -371,6 +371,23 @@ console.log(d)  // Duration { 2w 3d 5h 30m }
 
 ### Utility Methods
 
+#### ratio()
+
+```typescript
+ratio(other: DurationInput): number
+```
+
+Return this duration as a fraction of another. Useful for progress bars and animations.
+
+```typescript
+Duration.fromMinutes(30).ratio(Duration.fromHours(1))    // 0.5
+Duration.fromSeconds(45).ratio(Duration.fromMinutes(1))  // 0.75
+Duration.fromMinutes(10).ratio(Duration.fromMinutes(5))  // 2 (over 100%)
+
+// Progress bar example
+const progress = elapsed.ratio(total)  // 0.0 – 1.0
+```
+
 #### clamp()
 
 ```typescript
