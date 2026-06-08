@@ -264,12 +264,14 @@ Duration.fromMilliseconds(0).isZero()  // true
 
 ```typescript
 toMilliseconds(): number
-toSeconds(): number        // Truncates fractional seconds
-toMinutes(): number        // Truncates fractional minutes
-toHours(): number          // Truncates fractional hours
-toDays(): number           // Truncates fractional days
-toWeeks(): number          // Truncates fractional weeks
+toSeconds(options?: { exact?: boolean }): number
+toMinutes(options?: { exact?: boolean }): number
+toHours(options?: { exact?: boolean }): number
+toDays(options?: { exact?: boolean }): number
+toWeeks(options?: { exact?: boolean }): number
 ```
+
+By default all methods truncate (floor). Pass `{ exact: true }` to get the fractional value.
 
 **Examples:**
 
@@ -279,6 +281,11 @@ const d = Duration.fromMinutes(5).and(30, 'seconds')
 d.toMilliseconds()  // 330000
 d.toSeconds()       // 330
 d.toMinutes()       // 5 (truncated)
+
+Duration.fromMilliseconds(1500).toSeconds({ exact: true })  // 1.5
+Duration.fromSeconds(90).toMinutes({ exact: true })         // 1.5
+Duration.fromMinutes(90).toHours({ exact: true })           // 1.5
+Duration.fromHours(36).toDays({ exact: true })              // 1.5
 ```
 
 #### toObject()

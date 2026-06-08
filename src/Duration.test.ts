@@ -723,6 +723,10 @@ describe('Duration', () => {
         const d = Duration.fromMinutes(2)
         expect(d.toSeconds()).toBe(120)
       })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromMilliseconds(1500).toSeconds({ exact: true })).toBe(1.5)
+      })
     })
 
     describe('toMinutes()', () => {
@@ -734,6 +738,10 @@ describe('Duration', () => {
       it('should handle hours correctly', () => {
         const d = Duration.fromHours(2)
         expect(d.toMinutes()).toBe(120)
+      })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromSeconds(90).toMinutes({ exact: true })).toBe(1.5)
       })
     })
 
@@ -747,6 +755,10 @@ describe('Duration', () => {
         const d = Duration.fromDays(2)
         expect(d.toHours()).toBe(48)
       })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromMinutes(90).toHours({ exact: true })).toBe(1.5)
+      })
     })
 
     describe('toDays()', () => {
@@ -759,6 +771,10 @@ describe('Duration', () => {
         const d = Duration.fromWeeks(2)
         expect(d.toDays()).toBe(14)
       })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromHours(36).toDays({ exact: true })).toBe(1.5)
+      })
     })
 
     describe('toWeeks()', () => {
@@ -770,6 +786,10 @@ describe('Duration', () => {
       it('should handle exact weeks', () => {
         const d = Duration.fromDays(14)
         expect(d.toWeeks()).toBe(2)
+      })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromDays(3).toWeeks({ exact: true })).toBeCloseTo(3 / 7)
       })
     })
 
