@@ -425,6 +425,21 @@ export default class Duration {
   }
 
   /**
+   * Check if this duration falls within [min, max] (inclusive on both ends).
+   * @param {Duration|Object|number} min - Lower bound.
+   * @param {Duration|Object|number} max - Upper bound.
+   * @returns {boolean} True if min <= this <= max.
+   * @example
+   * Duration.fromMilliseconds(450).isBetween(
+   *   Duration.fromMilliseconds(100),
+   *   Duration.fromSeconds(1)
+   * )  // true
+   */
+  isBetween (min: DurationInput, max: DurationInput): boolean {
+    return this.isGreaterThanOrEqual(min) && this.isLessThanOrEqual(max)
+  }
+
+  /**
    * Check if this duration is zero.
    * @returns {boolean} True if duration is zero.
    */

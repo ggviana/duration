@@ -242,6 +242,7 @@ isLessThan(other: DurationInput): boolean
 isGreaterThan(other: DurationInput): boolean
 isLessThanOrEqual(other: DurationInput): boolean
 isGreaterThanOrEqual(other: DurationInput): boolean
+isBetween(min: DurationInput, max: DurationInput): boolean
 isZero(): boolean
 ```
 
@@ -262,6 +263,9 @@ d1.equals('PT5M')          // true (ISO 8601 string)
 d1.isLessThan(d2)          // false
 d1.isGreaterThan(1000)     // true (1000ms = 1s)
 d1.isGreaterThan('PT1S')   // true (string comparison)
+d1.isBetween(Duration.fromMinutes(3), Duration.fromMinutes(8))  // true
+d1.isBetween(Duration.fromMinutes(6), Duration.fromMinutes(10)) // false
+
 d1.isZero()                // false
 
 Duration.fromMilliseconds(0).isZero()  // true

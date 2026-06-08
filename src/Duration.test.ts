@@ -663,6 +663,33 @@ describe('Duration', () => {
       })
     })
 
+    describe('isBetween()', () => {
+      it('should return true when within bounds', () => {
+        const d = Duration.fromMilliseconds(450)
+        expect(d.isBetween(Duration.fromMilliseconds(100), Duration.fromSeconds(1))).toBe(true)
+      })
+
+      it('should return true on the lower boundary (inclusive)', () => {
+        const d = Duration.fromMinutes(5)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(true)
+      })
+
+      it('should return true on the upper boundary (inclusive)', () => {
+        const d = Duration.fromMinutes(10)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(true)
+      })
+
+      it('should return false when below bounds', () => {
+        const d = Duration.fromMinutes(3)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(false)
+      })
+
+      it('should return false when above bounds', () => {
+        const d = Duration.fromMinutes(15)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(false)
+      })
+    })
+
     describe('isZero()', () => {
       it('should return true for zero duration', () => {
         const d = new Duration(0)
