@@ -1,3 +1,4 @@
+/* v8 ignore next */
 import type { TimeUnit, DurationLike, DurationFormatOptions, IntlDurationFormatCtor } from './types'
 
 export type { TimeUnit, DurationLike }

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import Duration from './Duration'
-import type { DurationLike } from './Duration'
+import Duration, { type DurationLike } from './index'
 
 describe('Duration', () => {
   describe('Constructor', () => {
@@ -132,6 +131,11 @@ describe('Duration', () => {
         expect(result.toMilliseconds()).toBe(d1.toMilliseconds())
       })
 
+      it('should return b when b is smaller', () => {
+        const result = Duration.min(Duration.fromMinutes(10), Duration.fromMinutes(5))
+        expect(result.toMinutes()).toBe(5)
+      })
+
       it('should work with DurationInput types', () => {
         const result = Duration.min(5000, Duration.fromSeconds(10))
         expect(result.toMilliseconds()).toBe(5000)
@@ -149,6 +153,16 @@ describe('Duration', () => {
         const d2 = Duration.fromMinutes(10)
         const result = Duration.max(d1, d2)
         expect(result.toMilliseconds()).toBe(d2.toMilliseconds())
+      })
+
+      it('should return b when b is larger', () => {
+        const result = Duration.max(Duration.fromMinutes(5), Duration.fromMinutes(10))
+        expect(result.toMinutes()).toBe(10)
+      })
+
+      it('should return a when a is larger', () => {
+        const result = Duration.max(Duration.fromMinutes(10), Duration.fromMinutes(5))
+        expect(result.toMinutes()).toBe(10)
       })
 
       it('should work with DurationInput types', () => {
@@ -763,6 +777,10 @@ describe('Duration', () => {
     })
 
     describe('valueOf()', () => {
+      it('should return milliseconds when called directly', () => {
+        expect(Duration.fromSeconds(5).valueOf()).toBe(5000)
+      })
+
       it('should support unary + coercion', () => {
         const duration = Duration.fromSeconds(5)
         expect(+duration).toBe(5000)
@@ -810,6 +828,10 @@ describe('Duration', () => {
       it('should support Date arithmetic', () => {
         const duration = Duration.fromSeconds(5)
         expect(new Date(0 + duration)).toEqual(new Date(5000))
+      })
+
+      it('should return ISO 8601 string via template literal (string hint)', () => {
+        expect(`${Duration.fromMinutes(5)}`).toBe('PT5M')
       })
 
       it('should return 0 for zero duration', () => {
@@ -957,6 +979,10 @@ describe('Duration', () => {
       it('should return ISO 8601 format for combined durations', () => {
         const d = Duration.fromHours(1).and(30, 'minutes')
         expect(d.toString()).toBe('PT1H30M')
+      })
+
+      it('should return ISO 8601 format with days only (no T section)', () => {
+        expect(Duration.fromDays(2).toString()).toBe('P2D')
       })
 
       it('should return ISO 8601 format with days', () => {
