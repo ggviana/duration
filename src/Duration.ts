@@ -212,6 +212,18 @@ export default class Duration {
   }
 
   /**
+   * Sum an array of durations.
+   * @param {Array<Duration|Object|number|string>} durations - Durations to sum.
+   * @returns {Duration} Total duration.
+   * @example
+   * const laps = [Duration.fromSeconds(62), Duration.fromSeconds(58), Duration.fromSeconds(61)]
+   * Duration.sum(laps)  // Duration of 181 seconds
+   */
+  static sum (durations: DurationInput[]): Duration {
+    return durations.reduce<Duration>((acc, d) => acc.add(d), new Duration(0))
+  }
+
+  /**
    * Determine if an object is a Duration, duration-like, or parseable duration string.
    * @param {*} obj - Object to test.
    * @returns {boolean} True if instance of Duration, has valid duration parts, or is a valid ISO 8601 duration string.

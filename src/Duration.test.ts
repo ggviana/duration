@@ -162,6 +162,30 @@ describe('Duration', () => {
       })
     })
 
+    describe('sum()', () => {
+      it('should sum an array of durations', () => {
+        const laps = [Duration.fromSeconds(62), Duration.fromSeconds(58), Duration.fromSeconds(61)]
+        expect(Duration.sum(laps).toSeconds()).toBe(181)
+      })
+
+      it('should return zero for an empty array', () => {
+        expect(Duration.sum([]).isZero()).toBe(true)
+      })
+
+      it('should accept mixed DurationInput types', () => {
+        const result = Duration.sum([
+          Duration.fromMinutes(1),
+          30000,
+          { seconds: 30 }
+        ])
+        expect(result.toSeconds()).toBe(120)
+      })
+
+      it('should return a Duration instance', () => {
+        expect(Duration.sum([Duration.fromSeconds(1)])).toBeInstanceOf(Duration)
+      })
+    })
+
     describe('isDuration()', () => {
       it('should return true for Duration instances', () => {
         const d = Duration.fromMinutes(5)

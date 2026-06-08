@@ -422,6 +422,21 @@ const max = Duration.max(
 console.log(max.toMinutes())  // 10
 ```
 
+#### Duration.sum()
+
+```typescript
+Duration.sum(durations: DurationInput[]): Duration
+```
+
+Sum an array of durations into one.
+
+```typescript
+const laps = [Duration.fromSeconds(62), Duration.fromSeconds(58), Duration.fromSeconds(61)]
+Duration.sum(laps).toSeconds()  // 181
+
+Duration.sum([])  // Duration of 0
+```
+
 #### Duration.isDuration()
 
 ```typescript
