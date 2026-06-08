@@ -724,7 +724,7 @@ Duration works in all modern browsers and Node.js environments that support:
 - Private class fields (`#field`)
 
 **Minimum versions:**
-- Node.js 16+
+- Node.js 18+
 - Chrome 90+
 - Firefox 90+
 - Safari 15+
