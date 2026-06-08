@@ -1,10 +1,7 @@
 /* v8 ignore next */
-import type { TimeUnit, DurationLike, DurationFormatOptions, IntlDurationFormatCtor } from './types'
+import type { TimeUnit, DurationLike, DurationFormatOptions, IntlDurationFormatCtor, DurationInput, ConversionOptions } from './types'
 
-export type { TimeUnit, DurationLike }
-
-// Duration constructor input type
-export type DurationInput = number | string | Duration | Partial<DurationLike>
+export type { TimeUnit, DurationLike, DurationInput, ConversionOptions }
 
 export default class Duration {
   /* Private field holding milliseconds */
@@ -485,70 +482,70 @@ export default class Duration {
 
   /**
    * Convert the instance to total seconds.
-   * @param {{ exact?: boolean }} [options]
+   * @param {ConversionOptions} [options]
    * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
    * @example
    * Duration.fromMilliseconds(1500).toSeconds()              // 1
    * Duration.fromMilliseconds(1500).toSeconds({ exact: true }) // 1.5
    */
-  toSeconds (options?: { exact?: boolean }): number {
+  toSeconds (options?: ConversionOptions): number {
     const value = this.#milliseconds / Duration.Units.Second
     return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total minutes.
-   * @param {{ exact?: boolean }} [options]
+   * @param {ConversionOptions} [options]
    * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
    * @example
    * Duration.fromSeconds(90).toMinutes()              // 1
    * Duration.fromSeconds(90).toMinutes({ exact: true }) // 1.5
    */
-  toMinutes (options?: { exact?: boolean }): number {
+  toMinutes (options?: ConversionOptions): number {
     const value = this.#milliseconds / Duration.Units.Minute
     return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total hours.
-   * @param {{ exact?: boolean }} [options]
+   * @param {ConversionOptions} [options]
    * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
    * @example
    * Duration.fromMinutes(90).toHours()              // 1
    * Duration.fromMinutes(90).toHours({ exact: true }) // 1.5
    */
-  toHours (options?: { exact?: boolean }): number {
+  toHours (options?: ConversionOptions): number {
     const value = this.#milliseconds / Duration.Units.Hour
     return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total days.
-   * @param {{ exact?: boolean }} [options]
+   * @param {ConversionOptions} [options]
    * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
    * @example
    * Duration.fromHours(36).toDays()              // 1
    * Duration.fromHours(36).toDays({ exact: true }) // 1.5
    */
-  toDays (options?: { exact?: boolean }): number {
+  toDays (options?: ConversionOptions): number {
     const value = this.#milliseconds / Duration.Units.Day
     return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total weeks.
-   * @param {{ exact?: boolean }} [options]
+   * @param {ConversionOptions} [options]
    * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
    * @example
    * Duration.fromDays(10).toWeeks()              // 1
    * Duration.fromDays(10).toWeeks({ exact: true }) // ~1.428
    */
-  toWeeks (options?: { exact?: boolean }): number {
+  toWeeks (options?: ConversionOptions): number {
     const value = this.#milliseconds / Duration.Units.Week
     return options?.exact ? value : Math.floor(value)
   }

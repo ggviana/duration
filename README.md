@@ -480,9 +480,10 @@ Duration is written in TypeScript and includes full type definitions.
 
 ```typescript
 import Duration, {
-  DurationLike,
-  TimeUnit,
-  DurationInput
+  type DurationLike,
+  type TimeUnit,
+  type DurationInput,
+  type ConversionOptions
 } from '@ggviana.eth/duration'
 ```
 
@@ -509,8 +510,11 @@ interface DurationLike {
   milliseconds: number
 }
 
-// Accepted input types
+// Accepted input types for Duration methods
 type DurationInput = number | string | Duration | Partial<DurationLike>
+
+// Options for unit conversion methods (toSeconds, toMinutes, etc.)
+type ConversionOptions = { exact?: boolean }
 ```
 
 ### Type Safety Examples
