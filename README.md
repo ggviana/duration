@@ -236,6 +236,7 @@ Duration.fromMinutes(35).roundTo('hour')  // 1 hour
 All comparison methods accept `DurationInput` (Duration, number, ISO 8601 string, or partial DurationLike object).
 
 ```typescript
+compare(other: DurationInput): number
 equals(other: DurationInput): boolean
 isLessThan(other: DurationInput): boolean
 isGreaterThan(other: DurationInput): boolean
@@ -249,6 +250,12 @@ isZero(): boolean
 ```typescript
 const d1 = Duration.fromMinutes(5)
 const d2 = Duration.fromSeconds(300)
+
+// Sort an array of durations
+durations.sort((a, b) => a.compare(b))
+
+d1.compare(Duration.fromMinutes(10))  // negative (d1 is shorter)
+d1.compare(d2)                        // 0 (equal)
 
 d1.equals(d2)              // true
 d1.equals('PT5M')          // true (ISO 8601 string)

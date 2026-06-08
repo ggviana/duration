@@ -367,6 +367,19 @@ export default class Duration {
   }
 
   /**
+   * Compare this duration with another, suitable for use in sort callbacks.
+   * @param {Duration|Object|number} other - A Duration, a DurationLike object, or raw milliseconds.
+   * @returns {number} Negative if this is shorter, 0 if equal, positive if longer.
+   * @example
+   * durations.sort((a, b) => a.compare(b))
+   * Duration.fromMinutes(5).compare(Duration.fromMinutes(10))  // negative
+   * Duration.fromMinutes(5).compare(Duration.fromMinutes(5))   // 0
+   */
+  compare (other: DurationInput): number {
+    return this.#compare(other)
+  }
+
+  /**
    * Check equality with another duration.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {boolean} True if equal.

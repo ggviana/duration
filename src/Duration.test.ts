@@ -531,6 +531,32 @@ describe('Duration', () => {
   })
 
   describe('Comparison Methods', () => {
+    describe('compare()', () => {
+      it('should return negative when this is less', () => {
+        expect(Duration.fromMinutes(5).compare(Duration.fromMinutes(10))).toBeLessThan(0)
+      })
+
+      it('should return zero when equal', () => {
+        expect(Duration.fromMinutes(5).compare(Duration.fromSeconds(300))).toBe(0)
+      })
+
+      it('should return positive when this is greater', () => {
+        expect(Duration.fromMinutes(10).compare(Duration.fromMinutes(5))).toBeGreaterThan(0)
+      })
+
+      it('should work for sorting', () => {
+        const d1 = Duration.fromMinutes(10)
+        const d2 = Duration.fromMinutes(3)
+        const d3 = Duration.fromMinutes(7)
+        const sorted = [d1, d2, d3].sort((a, b) => a.compare(b))
+        expect(sorted.map(d => d.toMinutes())).toEqual([3, 7, 10])
+      })
+
+      it('should accept raw milliseconds', () => {
+        expect(Duration.fromSeconds(5).compare(5000)).toBe(0)
+      })
+    })
+
     describe('equals()', () => {
       it('should return true for equal durations', () => {
         const d1 = Duration.fromMinutes(5)
