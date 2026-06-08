@@ -302,6 +302,18 @@ export default class Duration {
   }
 
   /**
+   * Multiply this duration by a numeric factor.
+   * @param {number} factor - Multiplier (can be fractional or negative; negative results are clamped to zero).
+   * @returns {Duration} New Duration scaled by the factor.
+   * @example
+   * Duration.fromMinutes(5).multiply(3)    // 15 minutes
+   * Duration.fromHours(1).multiply(0.5)    // 30 minutes
+   */
+  multiply (factor: number): Duration {
+    return new Duration(this.#milliseconds * factor)
+  }
+
+  /**
    * Subtract another duration, bottoming out at zero.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {Duration} New Duration representing the non-negative difference.

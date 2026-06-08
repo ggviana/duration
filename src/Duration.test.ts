@@ -391,6 +391,27 @@ describe('Duration', () => {
       })
     })
 
+    describe('multiply()', () => {
+      it('should multiply by an integer', () => {
+        expect(Duration.fromMinutes(5).multiply(3).toMinutes()).toBe(15)
+      })
+
+      it('should multiply by a fraction', () => {
+        expect(Duration.fromHours(1).multiply(0.5).toMilliseconds()).toBe(1800000)
+      })
+
+      it('should multiply by zero', () => {
+        expect(Duration.fromMinutes(5).multiply(0).isZero()).toBe(true)
+      })
+
+      it('should return new instance (immutability)', () => {
+        const d = Duration.fromMinutes(5)
+        const result = d.multiply(2)
+        expect(d.toMinutes()).toBe(5)
+        expect(result.toMinutes()).toBe(10)
+      })
+    })
+
     describe('subtract()', () => {
       it('should subtract Duration from Duration', () => {
         const d1 = Duration.fromMinutes(10)

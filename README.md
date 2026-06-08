@@ -168,6 +168,20 @@ const time = Duration.fromHours(1)
 console.log(time.toString())  // PT1H30M45S
 ```
 
+#### multiply()
+
+```typescript
+multiply(factor: number): Duration
+```
+
+Scale a duration by a numeric factor.
+
+```typescript
+Duration.fromMinutes(5).multiply(3)    // 15 minutes
+Duration.fromHours(1).multiply(0.5)   // 30 minutes
+Duration.fromSeconds(10).multiply(0)  // 0
+```
+
 #### subtract()
 
 ```typescript
