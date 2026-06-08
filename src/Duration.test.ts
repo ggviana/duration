@@ -663,6 +663,33 @@ describe('Duration', () => {
       })
     })
 
+    describe('clamp()', () => {
+      it('should return this when within bounds', () => {
+        const d = Duration.fromMinutes(7)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(7)
+      })
+
+      it('should return min when below bounds', () => {
+        const d = Duration.fromMinutes(3)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(5)
+      })
+
+      it('should return max when above bounds', () => {
+        const d = Duration.fromSeconds(120)
+        expect(d.clamp(Duration.fromSeconds(1), Duration.fromMinutes(1)).toSeconds()).toBe(60)
+      })
+
+      it('should return this when on the lower boundary', () => {
+        const d = Duration.fromMinutes(5)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(5)
+      })
+
+      it('should return this when on the upper boundary', () => {
+        const d = Duration.fromMinutes(10)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(10)
+      })
+    })
+
     describe('isBetween()', () => {
       it('should return true when within bounds', () => {
         const d = Duration.fromMilliseconds(450)

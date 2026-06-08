@@ -425,6 +425,21 @@ export default class Duration {
   }
 
   /**
+   * Clamp this duration to the [min, max] range.
+   * @param {Duration|Object|number} min - Lower bound.
+   * @param {Duration|Object|number} max - Upper bound.
+   * @returns {Duration} This duration if within bounds, otherwise min or max.
+   * @example
+   * Duration.fromSeconds(120).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+   * // Duration.fromMinutes(1) — capped at max
+   */
+  clamp (min: DurationInput, max: DurationInput): Duration {
+    if (this.isLessThan(min)) return Duration.toDuration(min)
+    if (this.isGreaterThan(max)) return Duration.toDuration(max)
+    return this
+  }
+
+  /**
    * Check if this duration falls within [min, max] (inclusive on both ends).
    * @param {Duration|Object|number} min - Lower bound.
    * @param {Duration|Object|number} max - Upper bound.

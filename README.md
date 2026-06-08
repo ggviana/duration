@@ -371,6 +371,25 @@ console.log(d)  // Duration { 2w 3d 5h 30m }
 
 ### Utility Methods
 
+#### clamp()
+
+```typescript
+clamp(min: DurationInput, max: DurationInput): Duration
+```
+
+Clamp a duration to a [min, max] range. Returns `min` if below, `max` if above, or `this` if within bounds.
+
+```typescript
+Duration.fromSeconds(120).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+// Duration.fromMinutes(1) — capped at max
+
+Duration.fromMilliseconds(50).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+// Duration.fromSeconds(1) — raised to min
+
+Duration.fromSeconds(30).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+// Duration.fromSeconds(30) — unchanged
+```
+
 #### Duration.min()
 
 ```typescript
