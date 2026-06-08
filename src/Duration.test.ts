@@ -441,6 +441,56 @@ describe('Duration', () => {
       })
     })
 
+    describe('floorTo()', () => {
+      it('should floor seconds to minutes', () => {
+        expect(Duration.fromSeconds(90).floorTo('minute').toMinutes()).toBe(1)
+      })
+
+      it('should floor minutes to hours', () => {
+        expect(Duration.fromMinutes(61).floorTo('hour').toHours()).toBe(1)
+      })
+
+      it('should return same value when already on boundary', () => {
+        expect(Duration.fromMinutes(60).floorTo('hour').toHours()).toBe(1)
+      })
+
+      it('should work with plural units', () => {
+        expect(Duration.fromSeconds(90).floorTo('minutes').toMinutes()).toBe(1)
+      })
+
+      it('should return new instance (immutability)', () => {
+        const d = Duration.fromSeconds(90)
+        const result = d.floorTo('minute')
+        expect(d.toSeconds()).toBe(90)
+        expect(result.toSeconds()).toBe(60)
+      })
+    })
+
+    describe('ceilTo()', () => {
+      it('should ceil seconds to minutes', () => {
+        expect(Duration.fromSeconds(90).ceilTo('minute').toMinutes()).toBe(2)
+      })
+
+      it('should ceil minutes to hours', () => {
+        expect(Duration.fromMinutes(61).ceilTo('hour').toHours()).toBe(2)
+      })
+
+      it('should return same value when already on boundary', () => {
+        expect(Duration.fromMinutes(60).ceilTo('hour').toHours()).toBe(1)
+      })
+
+      it('should work with plural units', () => {
+        expect(Duration.fromSeconds(90).ceilTo('minutes').toMinutes()).toBe(2)
+      })
+
+      it('should return new instance (immutability)', () => {
+        const d = Duration.fromSeconds(90)
+        const result = d.ceilTo('minute')
+        expect(d.toSeconds()).toBe(90)
+        expect(result.toSeconds()).toBe(120)
+      })
+    })
+
     describe('roundTo()', () => {
       it('should round to seconds', () => {
         const d = Duration.fromMilliseconds(1600)

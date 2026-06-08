@@ -199,6 +199,22 @@ const remaining = d1.subtract(d2)  // 20 minutes
 const d3 = d2.subtract(d1)  // 0 (not negative)
 ```
 
+#### floorTo() / ceilTo()
+
+```typescript
+floorTo(unit: TimeUnit): Duration
+ceilTo(unit: TimeUnit): Duration
+```
+
+Floor or ceil a duration to the nearest unit boundary.
+
+```typescript
+Duration.fromSeconds(90).floorTo('minute')  // 1 minute
+Duration.fromSeconds(90).ceilTo('minute')   // 2 minutes
+Duration.fromMinutes(61).floorTo('hour')    // 1 hour
+Duration.fromMinutes(61).ceilTo('hour')     // 2 hours
+```
+
 #### roundTo()
 
 ```typescript

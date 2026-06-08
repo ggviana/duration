@@ -324,6 +324,34 @@ export default class Duration {
   }
 
   /**
+   * Floor this duration down to the given unit.
+   * @param {'millisecond'|'milliseconds'|'second'|'seconds'|'minute'|'minutes'|'hour'|'hours'|'day'|'days'|'week'|'weeks'} unit - Time unit to floor to.
+   * @returns {Duration} New Duration floored to the specified unit.
+   * @throws {TypeError} If the unit is invalid.
+   * @example
+   * Duration.fromSeconds(90).floorTo('minute')  // 1 minute
+   * Duration.fromMinutes(61).floorTo('hour')    // 1 hour
+   */
+  floorTo (unit: TimeUnit): Duration {
+    const divisor = Duration.getTimeUnit(unit)
+    return new Duration(Math.floor(this.#milliseconds / divisor) * divisor)
+  }
+
+  /**
+   * Ceil this duration up to the given unit.
+   * @param {'millisecond'|'milliseconds'|'second'|'seconds'|'minute'|'minutes'|'hour'|'hours'|'day'|'days'|'week'|'weeks'} unit - Time unit to ceil to.
+   * @returns {Duration} New Duration ceiled to the specified unit.
+   * @throws {TypeError} If the unit is invalid.
+   * @example
+   * Duration.fromSeconds(90).ceilTo('minute')  // 2 minutes
+   * Duration.fromMinutes(61).ceilTo('hour')    // 2 hours
+   */
+  ceilTo (unit: TimeUnit): Duration {
+    const divisor = Duration.getTimeUnit(unit)
+    return new Duration(Math.ceil(this.#milliseconds / divisor) * divisor)
+  }
+
+  /**
    * Round this duration to the nearest unit.
    * @param {'millisecond'|'milliseconds'|'second'|'seconds'|'minute'|'minutes'|'hour'|'hours'|'day'|'days'|'week'|'weeks'} unit - Time unit to round to.
    * @returns {Duration} New Duration rounded to the specified unit.
