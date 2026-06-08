@@ -168,6 +168,20 @@ const time = Duration.fromHours(1)
 console.log(time.toString())  // PT1H30M45S
 ```
 
+#### multiply()
+
+```typescript
+multiply(factor: number): Duration
+```
+
+Scale a duration by a numeric factor.
+
+```typescript
+Duration.fromMinutes(5).multiply(3)    // 15 minutes
+Duration.fromHours(1).multiply(0.5)   // 30 minutes
+Duration.fromSeconds(10).multiply(0)  // 0
+```
+
 #### subtract()
 
 ```typescript
@@ -183,6 +197,22 @@ const remaining = d1.subtract(d2)  // 20 minutes
 
 // Bottoms out at zero
 const d3 = d2.subtract(d1)  // 0 (not negative)
+```
+
+#### floorTo() / ceilTo()
+
+```typescript
+floorTo(unit: TimeUnit): Duration
+ceilTo(unit: TimeUnit): Duration
+```
+
+Floor or ceil a duration to the nearest unit boundary.
+
+```typescript
+Duration.fromSeconds(90).floorTo('minute')  // 1 minute
+Duration.fromSeconds(90).ceilTo('minute')   // 2 minutes
+Duration.fromMinutes(61).floorTo('hour')    // 1 hour
+Duration.fromMinutes(61).ceilTo('hour')     // 2 hours
 ```
 
 #### roundTo()
@@ -206,11 +236,13 @@ Duration.fromMinutes(35).roundTo('hour')  // 1 hour
 All comparison methods accept `DurationInput` (Duration, number, ISO 8601 string, or partial DurationLike object).
 
 ```typescript
+compare(other: DurationInput): number
 equals(other: DurationInput): boolean
 isLessThan(other: DurationInput): boolean
 isGreaterThan(other: DurationInput): boolean
 isLessThanOrEqual(other: DurationInput): boolean
 isGreaterThanOrEqual(other: DurationInput): boolean
+isBetween(min: DurationInput, max: DurationInput): boolean
 isZero(): boolean
 ```
 
@@ -220,11 +252,20 @@ isZero(): boolean
 const d1 = Duration.fromMinutes(5)
 const d2 = Duration.fromSeconds(300)
 
+// Sort an array of durations
+durations.sort((a, b) => a.compare(b))
+
+d1.compare(Duration.fromMinutes(10))  // negative (d1 is shorter)
+d1.compare(d2)                        // 0 (equal)
+
 d1.equals(d2)              // true
 d1.equals('PT5M')          // true (ISO 8601 string)
 d1.isLessThan(d2)          // false
 d1.isGreaterThan(1000)     // true (1000ms = 1s)
 d1.isGreaterThan('PT1S')   // true (string comparison)
+d1.isBetween(Duration.fromMinutes(3), Duration.fromMinutes(8))  // true
+d1.isBetween(Duration.fromMinutes(6), Duration.fromMinutes(10)) // false
+
 d1.isZero()                // false
 
 Duration.fromMilliseconds(0).isZero()  // true
@@ -234,12 +275,14 @@ Duration.fromMilliseconds(0).isZero()  // true
 
 ```typescript
 toMilliseconds(): number
-toSeconds(): number        // Truncates fractional seconds
-toMinutes(): number        // Truncates fractional minutes
-toHours(): number          // Truncates fractional hours
-toDays(): number           // Truncates fractional days
-toWeeks(): number          // Truncates fractional weeks
+toSeconds(options?: { exact?: boolean }): number
+toMinutes(options?: { exact?: boolean }): number
+toHours(options?: { exact?: boolean }): number
+toDays(options?: { exact?: boolean }): number
+toWeeks(options?: { exact?: boolean }): number
 ```
+
+By default all methods truncate (floor). Pass `{ exact: true }` to get the fractional value.
 
 **Examples:**
 
@@ -249,6 +292,11 @@ const d = Duration.fromMinutes(5).and(30, 'seconds')
 d.toMilliseconds()  // 330000
 d.toSeconds()       // 330
 d.toMinutes()       // 5 (truncated)
+
+Duration.fromMilliseconds(1500).toSeconds({ exact: true })  // 1.5
+Duration.fromSeconds(90).toMinutes({ exact: true })         // 1.5
+Duration.fromMinutes(90).toHours({ exact: true })           // 1.5
+Duration.fromHours(36).toDays({ exact: true })              // 1.5
 ```
 
 #### toObject()
@@ -323,6 +371,42 @@ console.log(d)  // Duration { 2w 3d 5h 30m }
 
 ### Utility Methods
 
+#### ratio()
+
+```typescript
+ratio(other: DurationInput): number
+```
+
+Return this duration as a fraction of another. Useful for progress bars and animations.
+
+```typescript
+Duration.fromMinutes(30).ratio(Duration.fromHours(1))    // 0.5
+Duration.fromSeconds(45).ratio(Duration.fromMinutes(1))  // 0.75
+Duration.fromMinutes(10).ratio(Duration.fromMinutes(5))  // 2 (over 100%)
+
+// Progress bar example
+const progress = elapsed.ratio(total)  // 0.0 – 1.0
+```
+
+#### clamp()
+
+```typescript
+clamp(min: DurationInput, max: DurationInput): Duration
+```
+
+Clamp a duration to a [min, max] range. Returns `min` if below, `max` if above, or `this` if within bounds.
+
+```typescript
+Duration.fromSeconds(120).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+// Duration.fromMinutes(1) — capped at max
+
+Duration.fromMilliseconds(50).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+// Duration.fromSeconds(1) — raised to min
+
+Duration.fromSeconds(30).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+// Duration.fromSeconds(30) — unchanged
+```
+
 #### Duration.min()
 
 ```typescript
@@ -355,6 +439,21 @@ const max = Duration.max(
 console.log(max.toMinutes())  // 10
 ```
 
+#### Duration.sum()
+
+```typescript
+Duration.sum(durations: DurationInput[]): Duration
+```
+
+Sum an array of durations into one.
+
+```typescript
+const laps = [Duration.fromSeconds(62), Duration.fromSeconds(58), Duration.fromSeconds(61)]
+Duration.sum(laps).toSeconds()  // 181
+
+Duration.sum([])  // Duration of 0
+```
+
 #### Duration.isDuration()
 
 ```typescript
@@ -381,9 +480,10 @@ Duration is written in TypeScript and includes full type definitions.
 
 ```typescript
 import Duration, {
-  DurationLike,
-  TimeUnit,
-  DurationInput
+  type DurationLike,
+  type TimeUnit,
+  type DurationInput,
+  type ConversionOptions
 } from '@ggviana.eth/duration'
 ```
 
@@ -410,8 +510,11 @@ interface DurationLike {
   milliseconds: number
 }
 
-// Accepted input types
+// Accepted input types for Duration methods
 type DurationInput = number | string | Duration | Partial<DurationLike>
+
+// Options for unit conversion methods (toSeconds, toMinutes, etc.)
+type ConversionOptions = { exact?: boolean }
 ```
 
 ### Type Safety Examples

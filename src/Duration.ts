@@ -1,9 +1,7 @@
-import type { TimeUnit, DurationLike, DurationFormatOptions, IntlDurationFormatCtor } from './types'
+/* v8 ignore next */
+import type { TimeUnit, DurationLike, DurationFormatOptions, IntlDurationFormatCtor, DurationInput, ConversionOptions } from './types'
 
-export type { TimeUnit, DurationLike }
-
-// Duration constructor input type
-export type DurationInput = number | string | Duration | Partial<DurationLike>
+export type { TimeUnit, DurationLike, DurationInput, ConversionOptions }
 
 export default class Duration {
   /* Private field holding milliseconds */
@@ -212,6 +210,18 @@ export default class Duration {
   }
 
   /**
+   * Sum an array of durations.
+   * @param {Array<Duration|Object|number|string>} durations - Durations to sum.
+   * @returns {Duration} Total duration.
+   * @example
+   * const laps = [Duration.fromSeconds(62), Duration.fromSeconds(58), Duration.fromSeconds(61)]
+   * Duration.sum(laps)  // Duration of 181 seconds
+   */
+  static sum (durations: DurationInput[]): Duration {
+    return durations.reduce<Duration>((acc, d) => acc.add(d), new Duration(0))
+  }
+
+  /**
    * Determine if an object is a Duration, duration-like, or parseable duration string.
    * @param {*} obj - Object to test.
    * @returns {boolean} True if instance of Duration, has valid duration parts, or is a valid ISO 8601 duration string.
@@ -302,6 +312,18 @@ export default class Duration {
   }
 
   /**
+   * Multiply this duration by a numeric factor.
+   * @param {number} factor - Multiplier (can be fractional or negative; negative results are clamped to zero).
+   * @returns {Duration} New Duration scaled by the factor.
+   * @example
+   * Duration.fromMinutes(5).multiply(3)    // 15 minutes
+   * Duration.fromHours(1).multiply(0.5)    // 30 minutes
+   */
+  multiply (factor: number): Duration {
+    return new Duration(this.#milliseconds * factor)
+  }
+
+  /**
    * Subtract another duration, bottoming out at zero.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {Duration} New Duration representing the non-negative difference.
@@ -309,6 +331,34 @@ export default class Duration {
   subtract (other: DurationInput): Duration {
     const diff = this.toMilliseconds() - Duration.toDuration(other).toMilliseconds()
     return new Duration(diff > 0 ? diff : 0)
+  }
+
+  /**
+   * Floor this duration down to the given unit.
+   * @param {'millisecond'|'milliseconds'|'second'|'seconds'|'minute'|'minutes'|'hour'|'hours'|'day'|'days'|'week'|'weeks'} unit - Time unit to floor to.
+   * @returns {Duration} New Duration floored to the specified unit.
+   * @throws {TypeError} If the unit is invalid.
+   * @example
+   * Duration.fromSeconds(90).floorTo('minute')  // 1 minute
+   * Duration.fromMinutes(61).floorTo('hour')    // 1 hour
+   */
+  floorTo (unit: TimeUnit): Duration {
+    const divisor = Duration.getTimeUnit(unit)
+    return new Duration(Math.floor(this.#milliseconds / divisor) * divisor)
+  }
+
+  /**
+   * Ceil this duration up to the given unit.
+   * @param {'millisecond'|'milliseconds'|'second'|'seconds'|'minute'|'minutes'|'hour'|'hours'|'day'|'days'|'week'|'weeks'} unit - Time unit to ceil to.
+   * @returns {Duration} New Duration ceiled to the specified unit.
+   * @throws {TypeError} If the unit is invalid.
+   * @example
+   * Duration.fromSeconds(90).ceilTo('minute')  // 2 minutes
+   * Duration.fromMinutes(61).ceilTo('hour')    // 2 hours
+   */
+  ceilTo (unit: TimeUnit): Duration {
+    const divisor = Duration.getTimeUnit(unit)
+    return new Duration(Math.ceil(this.#milliseconds / divisor) * divisor)
   }
 
   /**
@@ -324,6 +374,19 @@ export default class Duration {
   roundTo (unit: TimeUnit): Duration {
     const divisor = Duration.getTimeUnit(unit)
     return new Duration(Math.round(this.#milliseconds / divisor) * divisor)
+  }
+
+  /**
+   * Compare this duration with another, suitable for use in sort callbacks.
+   * @param {Duration|Object|number} other - A Duration, a DurationLike object, or raw milliseconds.
+   * @returns {number} Negative if this is shorter, 0 if equal, positive if longer.
+   * @example
+   * durations.sort((a, b) => a.compare(b))
+   * Duration.fromMinutes(5).compare(Duration.fromMinutes(10))  // negative
+   * Duration.fromMinutes(5).compare(Duration.fromMinutes(5))   // 0
+   */
+  compare (other: DurationInput): number {
+    return this.#compare(other)
   }
 
   /**
@@ -372,6 +435,36 @@ export default class Duration {
   }
 
   /**
+   * Clamp this duration to the [min, max] range.
+   * @param {Duration|Object|number} min - Lower bound.
+   * @param {Duration|Object|number} max - Upper bound.
+   * @returns {Duration} This duration if within bounds, otherwise min or max.
+   * @example
+   * Duration.fromSeconds(120).clamp(Duration.fromSeconds(1), Duration.fromMinutes(1))
+   * // Duration.fromMinutes(1) — capped at max
+   */
+  clamp (min: DurationInput, max: DurationInput): Duration {
+    if (this.isLessThan(min)) return Duration.toDuration(min)
+    if (this.isGreaterThan(max)) return Duration.toDuration(max)
+    return this
+  }
+
+  /**
+   * Check if this duration falls within [min, max] (inclusive on both ends).
+   * @param {Duration|Object|number} min - Lower bound.
+   * @param {Duration|Object|number} max - Upper bound.
+   * @returns {boolean} True if min <= this <= max.
+   * @example
+   * Duration.fromMilliseconds(450).isBetween(
+   *   Duration.fromMilliseconds(100),
+   *   Duration.fromSeconds(1)
+   * )  // true
+   */
+  isBetween (min: DurationInput, max: DurationInput): boolean {
+    return this.isGreaterThanOrEqual(min) && this.isLessThanOrEqual(max)
+  }
+
+  /**
    * Check if this duration is zero.
    * @returns {boolean} True if duration is zero.
    */
@@ -389,42 +482,72 @@ export default class Duration {
 
   /**
    * Convert the instance to total seconds.
+   * @param {ConversionOptions} [options]
+   * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
+   * @example
+   * Duration.fromMilliseconds(1500).toSeconds()              // 1
+   * Duration.fromMilliseconds(1500).toSeconds({ exact: true }) // 1.5
    */
-  toSeconds (): number {
-    return Math.floor(this.#milliseconds / Duration.Units.Second)
+  toSeconds (options?: ConversionOptions): number {
+    const value = this.#milliseconds / Duration.Units.Second
+    return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total minutes.
+   * @param {ConversionOptions} [options]
+   * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
+   * @example
+   * Duration.fromSeconds(90).toMinutes()              // 1
+   * Duration.fromSeconds(90).toMinutes({ exact: true }) // 1.5
    */
-  toMinutes (): number {
-    return Math.floor(this.#milliseconds / Duration.Units.Minute)
+  toMinutes (options?: ConversionOptions): number {
+    const value = this.#milliseconds / Duration.Units.Minute
+    return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total hours.
+   * @param {ConversionOptions} [options]
+   * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
+   * @example
+   * Duration.fromMinutes(90).toHours()              // 1
+   * Duration.fromMinutes(90).toHours({ exact: true }) // 1.5
    */
-  toHours (): number {
-    return Math.floor(this.#milliseconds / Duration.Units.Hour)
+  toHours (options?: ConversionOptions): number {
+    const value = this.#milliseconds / Duration.Units.Hour
+    return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total days.
+   * @param {ConversionOptions} [options]
+   * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
+   * @example
+   * Duration.fromHours(36).toDays()              // 1
+   * Duration.fromHours(36).toDays({ exact: true }) // 1.5
    */
-  toDays (): number {
-    return Math.floor(this.#milliseconds / Duration.Units.Day)
+  toDays (options?: ConversionOptions): number {
+    const value = this.#milliseconds / Duration.Units.Day
+    return options?.exact ? value : Math.floor(value)
   }
 
   /**
    * Convert the instance to total weeks.
+   * @param {ConversionOptions} [options]
+   * @param {boolean} [options.exact=false] - When true, returns the fractional value without truncation.
    * @returns {number}
+   * @example
+   * Duration.fromDays(10).toWeeks()              // 1
+   * Duration.fromDays(10).toWeeks({ exact: true }) // ~1.428
    */
-  toWeeks (): number {
-    return Math.floor(this.#milliseconds / Duration.Units.Week)
+  toWeeks (options?: ConversionOptions): number {
+    const value = this.#milliseconds / Duration.Units.Week
+    return options?.exact ? value : Math.floor(value)
   }
 
   /**
@@ -518,6 +641,21 @@ export default class Duration {
 
     const duration = parts.length > 0 ? parts.join(' ') : '0s'
     return `Duration { ${duration} }`
+  }
+
+  /**
+   * Return the ratio of this duration to another (this / other).
+   * @param {Duration|Object|number} other - The reference duration.
+   * @returns {number} Fractional ratio, e.g. 0.5 if this is half of other.
+   * @throws {RangeError} If other is zero.
+   * @example
+   * Duration.fromMinutes(30).ratio(Duration.fromHours(1))    // 0.5
+   * Duration.fromSeconds(45).ratio(Duration.fromMinutes(1))  // 0.75
+   */
+  ratio (other: DurationInput): number {
+    const otherMs = Duration.toDuration(other).toMilliseconds()
+    if (otherMs === 0) throw new RangeError('Cannot compute ratio against a zero duration')
+    return this.#milliseconds / otherMs
   }
 
   /**

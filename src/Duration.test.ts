@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import Duration from './Duration'
-import type { DurationLike } from './Duration'
+import Duration, { type DurationLike } from './index'
 
 describe('Duration', () => {
   describe('Constructor', () => {
@@ -132,6 +131,11 @@ describe('Duration', () => {
         expect(result.toMilliseconds()).toBe(d1.toMilliseconds())
       })
 
+      it('should return b when b is smaller', () => {
+        const result = Duration.min(Duration.fromMinutes(10), Duration.fromMinutes(5))
+        expect(result.toMinutes()).toBe(5)
+      })
+
       it('should work with DurationInput types', () => {
         const result = Duration.min(5000, Duration.fromSeconds(10))
         expect(result.toMilliseconds()).toBe(5000)
@@ -151,6 +155,16 @@ describe('Duration', () => {
         expect(result.toMilliseconds()).toBe(d2.toMilliseconds())
       })
 
+      it('should return b when b is larger', () => {
+        const result = Duration.max(Duration.fromMinutes(5), Duration.fromMinutes(10))
+        expect(result.toMinutes()).toBe(10)
+      })
+
+      it('should return a when a is larger', () => {
+        const result = Duration.max(Duration.fromMinutes(10), Duration.fromMinutes(5))
+        expect(result.toMinutes()).toBe(10)
+      })
+
       it('should work with DurationInput types', () => {
         const result = Duration.max(5000, Duration.fromSeconds(10))
         expect(result.toMilliseconds()).toBe(10000)
@@ -159,6 +173,30 @@ describe('Duration', () => {
       it('should work with DurationLike objects', () => {
         const result = Duration.max({ minutes: 5 }, { minutes: 10 })
         expect(result.toMinutes()).toBe(10)
+      })
+    })
+
+    describe('sum()', () => {
+      it('should sum an array of durations', () => {
+        const laps = [Duration.fromSeconds(62), Duration.fromSeconds(58), Duration.fromSeconds(61)]
+        expect(Duration.sum(laps).toSeconds()).toBe(181)
+      })
+
+      it('should return zero for an empty array', () => {
+        expect(Duration.sum([]).isZero()).toBe(true)
+      })
+
+      it('should accept mixed DurationInput types', () => {
+        const result = Duration.sum([
+          Duration.fromMinutes(1),
+          30000,
+          { seconds: 30 }
+        ])
+        expect(result.toSeconds()).toBe(120)
+      })
+
+      it('should return a Duration instance', () => {
+        expect(Duration.sum([Duration.fromSeconds(1)])).toBeInstanceOf(Duration)
       })
     })
 
@@ -391,6 +429,27 @@ describe('Duration', () => {
       })
     })
 
+    describe('multiply()', () => {
+      it('should multiply by an integer', () => {
+        expect(Duration.fromMinutes(5).multiply(3).toMinutes()).toBe(15)
+      })
+
+      it('should multiply by a fraction', () => {
+        expect(Duration.fromHours(1).multiply(0.5).toMilliseconds()).toBe(1800000)
+      })
+
+      it('should multiply by zero', () => {
+        expect(Duration.fromMinutes(5).multiply(0).isZero()).toBe(true)
+      })
+
+      it('should return new instance (immutability)', () => {
+        const d = Duration.fromMinutes(5)
+        const result = d.multiply(2)
+        expect(d.toMinutes()).toBe(5)
+        expect(result.toMinutes()).toBe(10)
+      })
+    })
+
     describe('subtract()', () => {
       it('should subtract Duration from Duration', () => {
         const d1 = Duration.fromMinutes(10)
@@ -417,6 +476,56 @@ describe('Duration', () => {
         const d2 = d1.subtract(Duration.fromMinutes(5))
         expect(d1.toMinutes()).toBe(10)
         expect(d2.toMinutes()).toBe(5)
+      })
+    })
+
+    describe('floorTo()', () => {
+      it('should floor seconds to minutes', () => {
+        expect(Duration.fromSeconds(90).floorTo('minute').toMinutes()).toBe(1)
+      })
+
+      it('should floor minutes to hours', () => {
+        expect(Duration.fromMinutes(61).floorTo('hour').toHours()).toBe(1)
+      })
+
+      it('should return same value when already on boundary', () => {
+        expect(Duration.fromMinutes(60).floorTo('hour').toHours()).toBe(1)
+      })
+
+      it('should work with plural units', () => {
+        expect(Duration.fromSeconds(90).floorTo('minutes').toMinutes()).toBe(1)
+      })
+
+      it('should return new instance (immutability)', () => {
+        const d = Duration.fromSeconds(90)
+        const result = d.floorTo('minute')
+        expect(d.toSeconds()).toBe(90)
+        expect(result.toSeconds()).toBe(60)
+      })
+    })
+
+    describe('ceilTo()', () => {
+      it('should ceil seconds to minutes', () => {
+        expect(Duration.fromSeconds(90).ceilTo('minute').toMinutes()).toBe(2)
+      })
+
+      it('should ceil minutes to hours', () => {
+        expect(Duration.fromMinutes(61).ceilTo('hour').toHours()).toBe(2)
+      })
+
+      it('should return same value when already on boundary', () => {
+        expect(Duration.fromMinutes(60).ceilTo('hour').toHours()).toBe(1)
+      })
+
+      it('should work with plural units', () => {
+        expect(Duration.fromSeconds(90).ceilTo('minutes').toMinutes()).toBe(2)
+      })
+
+      it('should return new instance (immutability)', () => {
+        const d = Duration.fromSeconds(90)
+        const result = d.ceilTo('minute')
+        expect(d.toSeconds()).toBe(90)
+        expect(result.toSeconds()).toBe(120)
       })
     })
 
@@ -460,6 +569,32 @@ describe('Duration', () => {
   })
 
   describe('Comparison Methods', () => {
+    describe('compare()', () => {
+      it('should return negative when this is less', () => {
+        expect(Duration.fromMinutes(5).compare(Duration.fromMinutes(10))).toBeLessThan(0)
+      })
+
+      it('should return zero when equal', () => {
+        expect(Duration.fromMinutes(5).compare(Duration.fromSeconds(300))).toBe(0)
+      })
+
+      it('should return positive when this is greater', () => {
+        expect(Duration.fromMinutes(10).compare(Duration.fromMinutes(5))).toBeGreaterThan(0)
+      })
+
+      it('should work for sorting', () => {
+        const d1 = Duration.fromMinutes(10)
+        const d2 = Duration.fromMinutes(3)
+        const d3 = Duration.fromMinutes(7)
+        const sorted = [d1, d2, d3].sort((a, b) => a.compare(b))
+        expect(sorted.map(d => d.toMinutes())).toEqual([3, 7, 10])
+      })
+
+      it('should accept raw milliseconds', () => {
+        expect(Duration.fromSeconds(5).compare(5000)).toBe(0)
+      })
+    })
+
     describe('equals()', () => {
       it('should return true for equal durations', () => {
         const d1 = Duration.fromMinutes(5)
@@ -566,6 +701,60 @@ describe('Duration', () => {
       })
     })
 
+    describe('clamp()', () => {
+      it('should return this when within bounds', () => {
+        const d = Duration.fromMinutes(7)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(7)
+      })
+
+      it('should return min when below bounds', () => {
+        const d = Duration.fromMinutes(3)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(5)
+      })
+
+      it('should return max when above bounds', () => {
+        const d = Duration.fromSeconds(120)
+        expect(d.clamp(Duration.fromSeconds(1), Duration.fromMinutes(1)).toSeconds()).toBe(60)
+      })
+
+      it('should return this when on the lower boundary', () => {
+        const d = Duration.fromMinutes(5)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(5)
+      })
+
+      it('should return this when on the upper boundary', () => {
+        const d = Duration.fromMinutes(10)
+        expect(d.clamp(Duration.fromMinutes(5), Duration.fromMinutes(10)).toMinutes()).toBe(10)
+      })
+    })
+
+    describe('isBetween()', () => {
+      it('should return true when within bounds', () => {
+        const d = Duration.fromMilliseconds(450)
+        expect(d.isBetween(Duration.fromMilliseconds(100), Duration.fromSeconds(1))).toBe(true)
+      })
+
+      it('should return true on the lower boundary (inclusive)', () => {
+        const d = Duration.fromMinutes(5)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(true)
+      })
+
+      it('should return true on the upper boundary (inclusive)', () => {
+        const d = Duration.fromMinutes(10)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(true)
+      })
+
+      it('should return false when below bounds', () => {
+        const d = Duration.fromMinutes(3)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(false)
+      })
+
+      it('should return false when above bounds', () => {
+        const d = Duration.fromMinutes(15)
+        expect(d.isBetween(Duration.fromMinutes(5), Duration.fromMinutes(10))).toBe(false)
+      })
+    })
+
     describe('isZero()', () => {
       it('should return true for zero duration', () => {
         const d = new Duration(0)
@@ -588,6 +777,10 @@ describe('Duration', () => {
     })
 
     describe('valueOf()', () => {
+      it('should return milliseconds when called directly', () => {
+        expect(Duration.fromSeconds(5).valueOf()).toBe(5000)
+      })
+
       it('should support unary + coercion', () => {
         const duration = Duration.fromSeconds(5)
         expect(+duration).toBe(5000)
@@ -637,6 +830,10 @@ describe('Duration', () => {
         expect(new Date(0 + duration)).toEqual(new Date(5000))
       })
 
+      it('should return ISO 8601 string via template literal (string hint)', () => {
+        expect(`${Duration.fromMinutes(5)}`).toBe('PT5M')
+      })
+
       it('should return 0 for zero duration', () => {
         expect(+Duration.fromMilliseconds(0)).toBe(0)
       })
@@ -652,6 +849,10 @@ describe('Duration', () => {
         const d = Duration.fromMinutes(2)
         expect(d.toSeconds()).toBe(120)
       })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromMilliseconds(1500).toSeconds({ exact: true })).toBe(1.5)
+      })
     })
 
     describe('toMinutes()', () => {
@@ -663,6 +864,10 @@ describe('Duration', () => {
       it('should handle hours correctly', () => {
         const d = Duration.fromHours(2)
         expect(d.toMinutes()).toBe(120)
+      })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromSeconds(90).toMinutes({ exact: true })).toBe(1.5)
       })
     })
 
@@ -676,6 +881,10 @@ describe('Duration', () => {
         const d = Duration.fromDays(2)
         expect(d.toHours()).toBe(48)
       })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromMinutes(90).toHours({ exact: true })).toBe(1.5)
+      })
     })
 
     describe('toDays()', () => {
@@ -688,6 +897,10 @@ describe('Duration', () => {
         const d = Duration.fromWeeks(2)
         expect(d.toDays()).toBe(14)
       })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromHours(36).toDays({ exact: true })).toBe(1.5)
+      })
     })
 
     describe('toWeeks()', () => {
@@ -699,6 +912,10 @@ describe('Duration', () => {
       it('should handle exact weeks', () => {
         const d = Duration.fromDays(14)
         expect(d.toWeeks()).toBe(2)
+      })
+
+      it('should return fractional value with { exact: true }', () => {
+        expect(Duration.fromDays(3).toWeeks({ exact: true })).toBeCloseTo(3 / 7)
       })
     })
 
@@ -762,6 +979,10 @@ describe('Duration', () => {
       it('should return ISO 8601 format for combined durations', () => {
         const d = Duration.fromHours(1).and(30, 'minutes')
         expect(d.toString()).toBe('PT1H30M')
+      })
+
+      it('should return ISO 8601 format with days only (no T section)', () => {
+        expect(Duration.fromDays(2).toString()).toBe('P2D')
       })
 
       it('should return ISO 8601 format with days', () => {
@@ -917,6 +1138,32 @@ describe('Duration', () => {
       const d = Duration.fromMinutes(90)
       const arr = Array.from(d)
       expect(arr).toHaveLength(6)
+    })
+  })
+
+  describe('ratio()', () => {
+    it('should return 0.5 when this is half of other', () => {
+      expect(Duration.fromMinutes(30).ratio(Duration.fromHours(1))).toBe(0.5)
+    })
+
+    it('should return 0.75 for 45s / 1m', () => {
+      expect(Duration.fromSeconds(45).ratio(Duration.fromMinutes(1))).toBe(0.75)
+    })
+
+    it('should return 1 when equal', () => {
+      expect(Duration.fromMinutes(5).ratio(Duration.fromMinutes(5))).toBe(1)
+    })
+
+    it('should return greater than 1 when this is larger', () => {
+      expect(Duration.fromMinutes(10).ratio(Duration.fromMinutes(5))).toBe(2)
+    })
+
+    it('should throw RangeError for zero other', () => {
+      expect(() => Duration.fromMinutes(5).ratio(new Duration(0))).toThrow(RangeError)
+    })
+
+    it('should accept raw milliseconds', () => {
+      expect(Duration.fromSeconds(1).ratio(2000)).toBe(0.5)
     })
   })
 
