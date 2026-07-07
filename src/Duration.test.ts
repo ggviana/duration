@@ -450,6 +450,38 @@ describe('Duration', () => {
       })
     })
 
+    describe('divide()', () => {
+      it('should divide by an integer', () => {
+        expect(Duration.fromMinutes(15).divide(3).toMinutes()).toBe(5)
+        expect(Duration.fromHours(1).divide(2).toMinutes()).toBe(30)
+      })
+
+      it('should divide by a fraction', () => {
+        expect(Duration.fromSeconds(1).divide(0.5).toSeconds()).toBe(2)
+      })
+
+      it('should be the inverse of multiply()', () => {
+        const d = Duration.fromMinutes(7)
+        expect(d.multiply(4).divide(4).equals(d)).toBe(true)
+      })
+
+      it('should support fractional results', () => {
+        expect(Duration.fromSeconds(1).divide(4).toMilliseconds()).toBe(250)
+      })
+
+      it('should throw RangeError when dividing by zero', () => {
+        expect(() => Duration.fromMinutes(5).divide(0)).toThrow(RangeError)
+        expect(() => Duration.fromMinutes(5).divide(0)).toThrow('Cannot divide a duration by zero')
+      })
+
+      it('should return new instance (immutability)', () => {
+        const d = Duration.fromMinutes(10)
+        const result = d.divide(2)
+        expect(d.toMinutes()).toBe(10)
+        expect(result.toMinutes()).toBe(5)
+      })
+    })
+
     describe('subtract()', () => {
       it('should subtract Duration from Duration', () => {
         const d1 = Duration.fromMinutes(10)
