@@ -224,6 +224,12 @@ describe('Duration', () => {
         expect(Duration.isDuration('P1DT2H30M')).toBe(true)
       })
 
+      it('should return true for valid human-readable duration strings', () => {
+        expect(Duration.isDuration('1h 30m')).toBe(true)
+        expect(Duration.isDuration('90 seconds')).toBe(true)
+        expect(Duration.isDuration('1.5 days')).toBe(true)
+      })
+
       it('should return false for invalid inputs', () => {
         expect(Duration.isDuration(null)).toBe(false)
         expect(Duration.isDuration(undefined)).toBe(false)
@@ -255,6 +261,11 @@ describe('Duration', () => {
       it('should convert ISO 8601 string to Duration', () => {
         const d = Duration.toDuration('PT1H30M')
         expect(d.toMinutes()).toBe(90)
+      })
+
+      it('should convert human-readable string to Duration', () => {
+        expect(Duration.toDuration('1h 30m').toMinutes()).toBe(90)
+        expect(Duration.toDuration('90 seconds').toSeconds()).toBe(90)
       })
 
       it('should throw TypeError for invalid input', () => {
@@ -335,8 +346,121 @@ describe('Duration', () => {
         const d2 = Duration.parseISO8601('PT1H30M')
         expect(d1.toMilliseconds()).toBe(d2.toMilliseconds())
       })
-    })
 
+      it('should parse human-readable strings', () => {
+        expect(Duration.parse('1h 30m').toMinutes()).toBe(90)
+        expect(Duration.parse('90 seconds').toSeconds()).toBe(90)
+      })
+
+      it('should ignore surrounding whitespace on ISO strings', () => {
+        expect(Duration.parse('  PT1H  ').toHours()).toBe(1)
+      })
+
+      it('should throw TypeError for invalid strings', () => {
+        expect(() => Duration.parse('P1Y')).toThrow(/Invalid ISO 8601/)
+        expect(() => Duration.parse('potato')).toThrow(TypeError)
+        expect(() => Duration.parse('one hour')).toThrow(TypeError)
+      })
+
+      it('should throw TypeError for non-string input', () => {
+        expect(() => Duration.parse(123 as any)).toThrow('Input must be a string')
+      })
+    })
+  })
+
+  describe('Human-Readable Parsing', () => {
+    describe('parseHuman()', () => {
+      it('should parse single unit segments', () => {
+        expect(Duration.parseHuman('30s').toSeconds()).toBe(30)
+        expect(Duration.parseHuman('5m').toMinutes()).toBe(5)
+        expect(Duration.parseHuman('2h').toHours()).toBe(2)
+        expect(Duration.parseHuman('1d').toDays()).toBe(1)
+        expect(Duration.parseHuman('1w').toWeeks()).toBe(1)
+        expect(Duration.parseHuman('250ms').toMilliseconds()).toBe(250)
+      })
+
+      it('should parse multiple segments', () => {
+        expect(Duration.parseHuman('1h 30m').toMinutes()).toBe(90)
+        expect(Duration.parseHuman('1d 2h 3m 4s').toMilliseconds()).toBe(
+          86400000 + 2 * 3600000 + 3 * 60000 + 4 * 1000
+        )
+      })
+
+      it('should parse segments without spaces', () => {
+        expect(Duration.parseHuman('1h30m').toMinutes()).toBe(90)
+        expect(Duration.parseHuman('1m30s').toSeconds()).toBe(90)
+      })
+
+      it('should parse spelled-out units in singular and plural', () => {
+        expect(Duration.parseHuman('90 seconds').toSeconds()).toBe(90)
+        expect(Duration.parseHuman('1 second').toSeconds()).toBe(1)
+        expect(Duration.parseHuman('5 minutes').toMinutes()).toBe(5)
+        expect(Duration.parseHuman('2 hours').toHours()).toBe(2)
+        expect(Duration.parseHuman('3 days').toDays()).toBe(3)
+        expect(Duration.parseHuman('2 weeks').toWeeks()).toBe(2)
+        expect(Duration.parseHuman('500 milliseconds').toMilliseconds()).toBe(500)
+      })
+
+      it('should parse intermediate abbreviations', () => {
+        expect(Duration.parseHuman('5 mins').toMinutes()).toBe(5)
+        expect(Duration.parseHuman('2 hrs').toHours()).toBe(2)
+        expect(Duration.parseHuman('30 secs').toSeconds()).toBe(30)
+        expect(Duration.parseHuman('1 wk').toWeeks()).toBe(1)
+        expect(Duration.parseHuman('100 msecs').toMilliseconds()).toBe(100)
+      })
+
+      it('should parse fractional values', () => {
+        expect(Duration.parseHuman('1.5 days').toHours()).toBe(36)
+        expect(Duration.parseHuman('0.5h').toMinutes()).toBe(30)
+        expect(Duration.parseHuman('1.5s').toMilliseconds()).toBe(1500)
+      })
+
+      it('should be case-insensitive', () => {
+        expect(Duration.parseHuman('1H 30M').toMinutes()).toBe(90)
+        expect(Duration.parseHuman('90 SECONDS').toSeconds()).toBe(90)
+      })
+
+      it('should accept commas and "and" as separators', () => {
+        expect(Duration.parseHuman('1 hour and 30 minutes').toMinutes()).toBe(90)
+        expect(Duration.parseHuman('1h, 30m, 15s').toSeconds()).toBe(5415)
+      })
+
+      it('should interpret a bare number as milliseconds', () => {
+        expect(Duration.parseHuman('500').toMilliseconds()).toBe(500)
+        expect(Duration.parseHuman('1.5').toMilliseconds()).toBe(1.5)
+      })
+
+      it('should sum repeated units', () => {
+        expect(Duration.parseHuman('1h 1h').toHours()).toBe(2)
+      })
+
+      it('should ignore surrounding whitespace', () => {
+        expect(Duration.parseHuman('  1h 30m  ').toMinutes()).toBe(90)
+      })
+
+      it('should throw TypeError for invalid strings', () => {
+        expect(() => Duration.parseHuman('')).toThrow(TypeError)
+        expect(() => Duration.parseHuman('   ')).toThrow(TypeError)
+        expect(() => Duration.parseHuman('potato')).toThrow(/Invalid duration string/)
+        expect(() => Duration.parseHuman('one hour')).toThrow(/Invalid duration string/)
+        expect(() => Duration.parseHuman('h1')).toThrow(/Invalid duration string/)
+        expect(() => Duration.parseHuman('-5m')).toThrow(/Invalid duration string/)
+      })
+
+      it('should throw TypeError for unknown units', () => {
+        expect(() => Duration.parseHuman('5 years')).toThrow(/Invalid unit "years"/)
+        expect(() => Duration.parseHuman('3 months')).toThrow(/Invalid unit "months"/)
+        expect(() => Duration.parseHuman('1x')).toThrow(/Invalid unit "x"/)
+      })
+
+      it('should throw TypeError for non-string input', () => {
+        expect(() => Duration.parseHuman(123 as any)).toThrow('Input must be a string')
+        expect(() => Duration.parseHuman(null as any)).toThrow('Input must be a string')
+      })
+    })
+  })
+
+  describe('Date Utilities', () => {
     describe('between()', () => {
       it('should return duration for a before b', () => {
         const a = new Date('2024-01-01T00:00:00Z')
