@@ -679,6 +679,21 @@ Duration.Units.Day          // 86400000
 Duration.Units.Week         // 604800000
 ```
 
+### Duration.ZERO
+
+A shared zero-length Duration. Since Duration is immutable, the same instance is safe to reuse anywhere a default, accumulator seed, or sentinel value is needed.
+
+```typescript
+Duration.ZERO.isZero()      // true
+Duration.ZERO.toString()    // 'PT0S'
+
+// Reduce seed
+const total = laps.reduce((acc, lap) => acc.add(lap), Duration.ZERO)
+
+// Default value
+const timeout = config.timeout ?? Duration.ZERO
+```
+
 ## Immutability
 
 All Duration operations return new instances. The original is never modified.

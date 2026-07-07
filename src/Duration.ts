@@ -18,6 +18,17 @@ export default class Duration {
   } as const
 
   /**
+   * A shared zero-length Duration.
+   * Since Duration is immutable, this instance is safe to reuse anywhere a
+   * default, accumulator seed, or sentinel value is needed.
+   * @example
+   * Duration.ZERO.isZero()                       // true
+   * durations.reduce((acc, d) => acc.add(d), Duration.ZERO)
+   * const timeout = config.timeout ?? Duration.ZERO
+   */
+  static readonly ZERO: Duration = new Duration(0)
+
+  /**
    * Construct a Duration from milliseconds, another Duration, or a breakdown object.
    * @param {number|Duration|Object} input - Value to construct from.
    * @param {number} [input.weeks=0] - Number of weeks (if object).
@@ -218,7 +229,7 @@ export default class Duration {
    * Duration.sum(laps)  // Duration of 181 seconds
    */
   static sum (durations: DurationInput[]): Duration {
-    return durations.reduce<Duration>((acc, d) => acc.add(d), new Duration(0))
+    return durations.reduce<Duration>((acc, d) => acc.add(d), Duration.ZERO)
   }
 
   /**
