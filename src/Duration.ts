@@ -686,6 +686,28 @@ export default class Duration {
   }
 
   /**
+   * Return a promise that resolves after this duration has elapsed.
+   * @returns {Promise<void>}
+   * @example
+   * await Duration.fromSeconds(2).sleep()  // Pause for 2 seconds
+   * await Duration.of(500, 'milliseconds').sleep()
+   */
+  sleep (): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, this.#milliseconds))
+  }
+
+  /**
+   * Create an AbortSignal that aborts once this duration has elapsed.
+   * Thin wrapper around `AbortSignal.timeout()`.
+   * @returns {AbortSignal} Signal that aborts with a TimeoutError after the duration.
+   * @example
+   * fetch(url, { signal: Duration.fromSeconds(5).toAbortSignal() })
+   */
+  toAbortSignal (): AbortSignal {
+    return AbortSignal.timeout(this.#milliseconds)
+  }
+
+  /**
    * Compare this duration with another.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {number} Negative if less, 0 if equal, positive if greater.

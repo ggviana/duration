@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import Duration, { type DurationLike } from './index'
 
 describe('Duration', () => {
@@ -1225,6 +1225,60 @@ describe('Duration', () => {
 
     it('should accept raw milliseconds', () => {
       expect(Duration.fromSeconds(1).ratio(2000)).toBe(0.5)
+    })
+  })
+
+  describe('Timer Helpers', () => {
+    describe('sleep()', () => {
+      it('should resolve after the duration has elapsed', async () => {
+        vi.useFakeTimers()
+        try {
+          let resolved = false
+          const promise = Duration.fromSeconds(2).sleep().then(() => {
+            resolved = true
+          })
+
+          await vi.advanceTimersByTimeAsync(1999)
+          expect(resolved).toBe(false)
+
+          await vi.advanceTimersByTimeAsync(1)
+          expect(resolved).toBe(true)
+
+          await promise
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+
+      it('should resolve immediately for a zero duration', async () => {
+        await new Duration(0).sleep()
+      })
+
+      it('should return a Promise', () => {
+        vi.useFakeTimers()
+        try {
+          expect(Duration.fromSeconds(1).sleep()).toBeInstanceOf(Promise)
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+    })
+
+    describe('toAbortSignal()', () => {
+      it('should return an AbortSignal that has not aborted yet', () => {
+        const signal = Duration.fromSeconds(5).toAbortSignal()
+        expect(signal).toBeInstanceOf(AbortSignal)
+        expect(signal.aborted).toBe(false)
+      })
+
+      it('should abort with a TimeoutError after the duration elapses', async () => {
+        const signal = Duration.fromMilliseconds(10).toAbortSignal()
+        await new Promise<void>(resolve => {
+          signal.addEventListener('abort', () => resolve(), { once: true })
+        })
+        expect(signal.aborted).toBe(true)
+        expect((signal.reason as Error).name).toBe('TimeoutError')
+      })
     })
   })
 

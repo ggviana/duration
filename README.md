@@ -405,6 +405,42 @@ Duration.fromMinutes(10).ratio(Duration.fromMinutes(5))  // 2 (over 100%)
 const progress = elapsed.ratio(total)  // 0.0 – 1.0
 ```
 
+#### sleep()
+
+```typescript
+sleep(): Promise<void>
+```
+
+Return a promise that resolves after the duration has elapsed. Great for scripts, retries with backoff, and tests.
+
+```typescript
+await Duration.fromSeconds(2).sleep()  // Pause for 2 seconds
+
+// Retry with growing delay
+for (let attempt = 1; attempt <= 3; attempt++) {
+  try {
+    return await doWork()
+  } catch {
+    await Duration.fromSeconds(1).multiply(attempt).sleep()
+  }
+}
+```
+
+#### toAbortSignal()
+
+```typescript
+toAbortSignal(): AbortSignal
+```
+
+Create an `AbortSignal` that aborts once the duration has elapsed — a readable wrapper around `AbortSignal.timeout()`. The signal aborts with a `TimeoutError`.
+
+```typescript
+// Abort a fetch that takes longer than 5 seconds
+const response = await fetch(url, {
+  signal: Duration.fromSeconds(5).toAbortSignal()
+})
+```
+
 #### clamp()
 
 ```typescript
