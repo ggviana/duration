@@ -182,6 +182,23 @@ Duration.fromHours(1).multiply(0.5)   // 30 minutes
 Duration.fromSeconds(10).multiply(0)  // 0
 ```
 
+#### divide()
+
+```typescript
+divide(divisor: number): Duration
+```
+
+Divide a duration by a numeric divisor — the inverse of `multiply()`. Throws `RangeError` when dividing by zero.
+
+```typescript
+Duration.fromHours(1).divide(2)      // 30 minutes
+Duration.fromMinutes(15).divide(3)   // 5 minutes
+Duration.fromSeconds(1).divide(0.5)  // 2 seconds
+
+// Split a time budget evenly
+const perTask = totalBudget.divide(tasks.length)
+```
+
 #### subtract()
 
 ```typescript

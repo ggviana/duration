@@ -324,6 +324,22 @@ export default class Duration {
   }
 
   /**
+   * Divide this duration by a numeric divisor.
+   * Inverse of multiply().
+   * @param {number} divisor - Divisor (can be fractional).
+   * @returns {Duration} New Duration scaled down by the divisor.
+   * @throws {RangeError} If divisor is zero.
+   * @example
+   * Duration.fromHours(1).divide(2)      // 30 minutes
+   * Duration.fromMinutes(15).divide(3)   // 5 minutes
+   * Duration.fromSeconds(1).divide(0.5)  // 2 seconds
+   */
+  divide (divisor: number): Duration {
+    if (divisor === 0) throw new RangeError('Cannot divide a duration by zero')
+    return new Duration(this.#milliseconds / divisor)
+  }
+
+  /**
    * Subtract another duration, bottoming out at zero.
    * @param {Duration|Object|number} other - A Duration, an DurationLike object, or raw milliseconds.
    * @returns {Duration} New Duration representing the non-negative difference.
