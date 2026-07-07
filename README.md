@@ -19,6 +19,7 @@ console.log(extended.toMinutes())  // 6 minutes
 - 🎯 **Type-Safe Units** - Prevent runtime errors with compile-time unit validation
 - 🔒 **Immutable** - All operations return new instances
 - 🌐 **ISO 8601** - Parse and serialize to standard duration format
+- 🗣 **Human-Friendly Parsing** - Understands strings like `'1h 30m'` and `'90 seconds'`
 - 📦 **Dual Format** - Works with ESM and CommonJS
 - 🪶 **Zero Dependencies** - Lightweight and self-contained
 - ✅ **100% Tested** - Comprehensive test coverage
@@ -119,17 +120,56 @@ Duration.of(3, 'week')      // or 'weeks'
 #### Parsing
 
 ```typescript
-Duration.parse(isoString: string): Duration
+Duration.parse(input: string): Duration
 Duration.parseISO8601(isoString: string): Duration
+Duration.parseHuman(input: string): Duration
 ```
 
-Parse an ISO 8601 duration string.
+`Duration.parse()` accepts both ISO 8601 and human-readable duration strings. Strings starting with `P` are parsed as ISO 8601; everything else is parsed as a human-readable duration.
 
 ```typescript
+// ISO 8601
 Duration.parse('PT1H30M')      // 1 hour 30 minutes
 Duration.parse('P1DT2H')       // 1 day 2 hours
 Duration.parse('PT30.5S')      // 30.5 seconds
 Duration.parse('P7DT3H15M30S') // Complex duration
+
+// Human-readable
+Duration.parse('1h 30m')       // 1 hour 30 minutes
+Duration.parse('90 seconds')   // 90 seconds
+Duration.parse('1.5 days')     // 1 day 12 hours
+```
+
+##### Human-Readable Strings
+
+`Duration.parseHuman()` parses strings made of one or more `<value><unit>` segments — ideal for config files, environment variables, and CLI flags.
+
+```typescript
+Duration.parseHuman('1h 30m')                 // 1 hour 30 minutes
+Duration.parseHuman('1h30m')                  // Spaces are optional
+Duration.parseHuman('90 seconds')             // Spelled-out units
+Duration.parseHuman('1 hour and 30 minutes')  // "and" and commas as separators
+Duration.parseHuman('1.5 days')               // Fractional values
+Duration.parseHuman('500')                    // Bare numbers are milliseconds
+```
+
+Supported units (case-insensitive, singular or plural):
+
+| Unit | Accepted forms |
+|------|----------------|
+| Milliseconds | `ms`, `msec(s)`, `millisecond(s)` |
+| Seconds | `s`, `sec(s)`, `second(s)` |
+| Minutes | `m`, `min(s)`, `minute(s)` |
+| Hours | `h`, `hr(s)`, `hour(s)` |
+| Days | `d`, `day(s)` |
+| Weeks | `w`, `wk(s)`, `week(s)` |
+
+Human-readable strings are accepted anywhere a `DurationInput` is expected:
+
+```typescript
+timeout.isGreaterThan('30s')
+Duration.fromMinutes(5).add('1h 30m')
+Duration.min('45m', '1h')
 ```
 
 ### Arithmetic Operations
@@ -513,13 +553,14 @@ Duration.sum([])  // Duration of 0
 Duration.isDuration(obj: unknown): obj is Duration | Partial<DurationLike> | string
 ```
 
-Type guard to check if a value is a Duration, duration-like object, or valid ISO 8601 duration string.
+Type guard to check if a value is a Duration, duration-like object, or valid duration string (ISO 8601 or human-readable).
 
 ```typescript
 Duration.isDuration(Duration.fromMinutes(5))  // true
 Duration.isDuration({ hours: 1, minutes: 30 })  // true
 Duration.isDuration('PT1H30M')  // true
 Duration.isDuration('P1D')  // true
+Duration.isDuration('1h 30m')  // true
 Duration.isDuration({ invalid: 'object' })  // false
 Duration.isDuration('invalid string')  // false
 Duration.isDuration(null)  // false

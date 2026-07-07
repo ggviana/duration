@@ -17,6 +17,38 @@ export default class Duration {
     Week: 604800000
   } as const
 
+  /** Millisecond values for the unit aliases accepted by parseHuman(). */
+  static readonly #HumanUnits: Record<string, number> = {
+    ms: Duration.Units.Millisecond,
+    msec: Duration.Units.Millisecond,
+    msecs: Duration.Units.Millisecond,
+    millisecond: Duration.Units.Millisecond,
+    milliseconds: Duration.Units.Millisecond,
+    s: Duration.Units.Second,
+    sec: Duration.Units.Second,
+    secs: Duration.Units.Second,
+    second: Duration.Units.Second,
+    seconds: Duration.Units.Second,
+    m: Duration.Units.Minute,
+    min: Duration.Units.Minute,
+    mins: Duration.Units.Minute,
+    minute: Duration.Units.Minute,
+    minutes: Duration.Units.Minute,
+    h: Duration.Units.Hour,
+    hr: Duration.Units.Hour,
+    hrs: Duration.Units.Hour,
+    hour: Duration.Units.Hour,
+    hours: Duration.Units.Hour,
+    d: Duration.Units.Day,
+    day: Duration.Units.Day,
+    days: Duration.Units.Day,
+    w: Duration.Units.Week,
+    wk: Duration.Units.Week,
+    wks: Duration.Units.Week,
+    week: Duration.Units.Week,
+    weeks: Duration.Units.Week
+  }
+
   /**
    * A shared zero-length Duration.
    * Since Duration is immutable, this instance is safe to reuse anywhere a
@@ -178,12 +210,79 @@ export default class Duration {
   }
 
   /**
-   * Alias for parseISO8601.
-   * @param {string} isoString - ISO 8601 duration string.
+   * Parse a human-readable duration string.
+   * Accepts one or more "<value><unit>" segments, optionally separated by spaces,
+   * commas, or "and". Units may be abbreviated (ms, s, m, h, d, w) or spelled out
+   * in singular or plural form. Values may be fractional. A bare number is
+   * interpreted as milliseconds.
+   * @param {string} input - Human-readable duration string.
    * @returns {Duration}
+   * @throws {TypeError} If the string is invalid or not a string.
+   * @example
+   * Duration.parseHuman('1h 30m')                  // 1 hour 30 minutes
+   * Duration.parseHuman('90 seconds')              // 90 seconds
+   * Duration.parseHuman('1.5 days')                // 1 day 12 hours
+   * Duration.parseHuman('1 hour and 30 minutes')   // 1 hour 30 minutes
+   * Duration.parseHuman('500')                     // 500 milliseconds
    */
-  static parse (isoString: string): Duration {
-    return Duration.parseISO8601(isoString)
+  static parseHuman (input: string): Duration {
+    if (typeof input !== 'string') {
+      throw new TypeError('Input must be a string')
+    }
+
+    // Normalize case and treat commas and "and" as plain separators
+    const normalized = input.trim().toLowerCase().replace(/,|\band\b/g, ' ')
+
+    // A bare number is interpreted as milliseconds
+    if (/^\d+(?:\.\d+)?$/.test(normalized)) {
+      return new Duration(parseFloat(normalized))
+    }
+
+    // The whole string must be a sequence of "<value><unit>" segments
+    if (!/^(?:\d+(?:\.\d+)?\s*[a-z]+\s*)+$/.test(normalized)) {
+      throw new TypeError(`Invalid duration string: "${input}"`)
+    }
+
+    let ms = 0
+    for (const match of normalized.matchAll(/(\d+(?:\.\d+)?)\s*([a-z]+)/g)) {
+      const value = parseFloat(match[1] || '0')
+      const unit = match[2] || ''
+      const unitValue = Duration.#HumanUnits[unit]
+
+      if (!unitValue) {
+        throw new TypeError(
+          `Invalid unit "${unit}" in duration string: "${input}". Use 'milliseconds', 'seconds', 'minutes', 'hours', 'days' or 'weeks' (or their abbreviations).`
+        )
+      }
+
+      ms += value * unitValue
+    }
+
+    return new Duration(ms)
+  }
+
+  /**
+   * Parse a duration string, either ISO 8601 or human-readable.
+   * Strings starting with "P" are parsed as ISO 8601; anything else is parsed
+   * with parseHuman().
+   * @param {string} input - ISO 8601 or human-readable duration string.
+   * @returns {Duration}
+   * @throws {TypeError} If the string is invalid or not a string.
+   * @example
+   * Duration.parse('PT1H30M')   // 1 hour 30 minutes
+   * Duration.parse('1h 30m')    // 1 hour 30 minutes
+   * Duration.parse('90 seconds') // 90 seconds
+   */
+  static parse (input: string): Duration {
+    if (typeof input !== 'string') {
+      throw new TypeError('Input must be a string')
+    }
+
+    if (/^\s*[Pp]/.test(input)) {
+      return Duration.parseISO8601(input.trim())
+    }
+
+    return Duration.parseHuman(input)
   }
 
   /**
@@ -235,15 +334,15 @@ export default class Duration {
   /**
    * Determine if an object is a Duration, duration-like, or parseable duration string.
    * @param {*} obj - Object to test.
-   * @returns {boolean} True if instance of Duration, has valid duration parts, or is a valid ISO 8601 duration string.
+   * @returns {boolean} True if instance of Duration, has valid duration parts, or is a valid ISO 8601 or human-readable duration string.
    */
   static isDuration (obj: unknown): obj is Duration | Partial<DurationLike> | string {
     if (obj instanceof Duration) return true
 
-    // Check if it's a parseable duration string
+    // Check if it's a parseable duration string (ISO 8601 or human-readable)
     if (typeof obj === 'string') {
       try {
-        Duration.parseISO8601(obj)
+        Duration.parse(obj)
         return true
       } catch {
         return false
@@ -263,7 +362,7 @@ export default class Duration {
 
   /**
    * Normalize any valid input to a Duration instance.
-   * @param {Duration|Object|number|string} value - A Duration, an DurationLike object, milliseconds, or ISO 8601 string.
+   * @param {Duration|Object|number|string} value - A Duration, an DurationLike object, milliseconds, or an ISO 8601 / human-readable string.
    * @returns {Duration}
    * @throws {TypeError} If `value` cannot be parsed into a Duration.
    * @private
@@ -274,7 +373,7 @@ export default class Duration {
     } else if (typeof value === 'number') {
       return new Duration(value)
     } else if (typeof value === 'string') {
-      return Duration.parseISO8601(value)
+      return Duration.parse(value)
     } else if (Duration.isDuration(value)) {
       const {
         weeks = 0,
@@ -294,7 +393,7 @@ export default class Duration {
       return new Duration(ms)
     }
 
-    throw new TypeError('Invalid constructor argument. Provide a number, another Duration, an ISO 8601 duration string, or an object with weeks, days, hours, minutes, seconds, and/or milliseconds.')
+    throw new TypeError('Invalid constructor argument. Provide a number, another Duration, an ISO 8601 or human-readable duration string, or an object with weeks, days, hours, minutes, seconds, and/or milliseconds.')
   }
 
   /**
