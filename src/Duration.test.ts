@@ -97,6 +97,35 @@ describe('Duration', () => {
     })
   })
 
+  describe('Duration.ZERO', () => {
+    it('should be a Duration instance of zero length', () => {
+      expect(Duration.ZERO).toBeInstanceOf(Duration)
+      expect(Duration.ZERO.isZero()).toBe(true)
+      expect(Duration.ZERO.toMilliseconds()).toBe(0)
+    })
+
+    it('should always return the same instance', () => {
+      expect(Duration.ZERO).toBe(Duration.ZERO)
+    })
+
+    it('should serialize like any zero duration', () => {
+      expect(Duration.ZERO.toString()).toBe('PT0S')
+      expect(Duration.ZERO.equals(new Duration(0))).toBe(true)
+    })
+
+    it('should stay unchanged when used in operations (immutability)', () => {
+      const result = Duration.ZERO.add(Duration.fromMinutes(5))
+      expect(result.toMinutes()).toBe(5)
+      expect(Duration.ZERO.isZero()).toBe(true)
+    })
+
+    it('should work as a reduce seed', () => {
+      const total = [Duration.fromSeconds(1), Duration.fromSeconds(2)]
+        .reduce((acc, d) => acc.add(d), Duration.ZERO)
+      expect(total.toSeconds()).toBe(3)
+    })
+  })
+
   describe('Static Utility Methods', () => {
     describe('getTimeUnit()', () => {
       it('should return correct unit values for singular forms', () => {
