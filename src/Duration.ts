@@ -1,7 +1,7 @@
 /* v8 ignore next */
-import type { TimeUnit, DurationLike, DurationFormatOptions, IntlDurationFormatCtor, DurationInput, ConversionOptions } from './types'
+import type { TimeUnit, DurationLike, DurationFormatOptions, IntlDurationFormatCtor, DurationInput, ConversionOptions, SleepOptions } from './types'
 
-export type { TimeUnit, DurationLike, DurationInput, ConversionOptions }
+export type { TimeUnit, DurationLike, DurationInput, ConversionOptions, SleepOptions }
 
 export default class Duration {
   /* Private field holding milliseconds */
@@ -786,13 +786,43 @@ export default class Duration {
 
   /**
    * Return a promise that resolves after this duration has elapsed.
+   * Pass an AbortSignal to cancel the sleep from outside: the timer is
+   * cleared and the promise rejects with the signal's abort reason
+   * (an AbortError DOMException by default).
+   * @param {SleepOptions} [options]
+   * @param {AbortSignal} [options.signal] - Signal that cancels the sleep when aborted.
    * @returns {Promise<void>}
    * @example
    * await Duration.fromSeconds(2).sleep()  // Pause for 2 seconds
    * await Duration.of(500, 'milliseconds').sleep()
+   *
+   * // Cancellable sleep
+   * const controller = new AbortController()
+   * Duration.fromMinutes(5).sleep({ signal: controller.signal })
+   *   .catch(() => console.log('sleep cancelled'))
+   * controller.abort()
    */
-  sleep (): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, this.#milliseconds))
+  sleep (options?: SleepOptions): Promise<void> {
+    const signal = options?.signal
+
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        reject(signal.reason)
+        return
+      }
+
+      const timer = setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort)
+        resolve()
+      }, this.#milliseconds)
+
+      function onAbort (): void {
+        clearTimeout(timer)
+        reject(signal?.reason)
+      }
+
+      signal?.addEventListener('abort', onAbort, { once: true })
+    })
   }
 
   /**

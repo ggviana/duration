@@ -448,7 +448,7 @@ const progress = elapsed.ratio(total)  // 0.0 – 1.0
 #### sleep()
 
 ```typescript
-sleep(): Promise<void>
+sleep(options?: { signal?: AbortSignal }): Promise<void>
 ```
 
 Return a promise that resolves after the duration has elapsed. Great for scripts, retries with backoff, and tests.
@@ -464,6 +464,25 @@ for (let attempt = 1; attempt <= 3; attempt++) {
     await Duration.fromSeconds(1).multiply(attempt).sleep()
   }
 }
+```
+
+Pass an `AbortSignal` to cancel the sleep from outside. The pending timer is cleared and the promise rejects with the signal's abort reason (an `AbortError` by default, or whatever you pass to `controller.abort()`):
+
+```typescript
+const controller = new AbortController()
+
+// A long sleep somewhere in your program...
+try {
+  await Duration.fromMinutes(5).sleep({ signal: controller.signal })
+} catch {
+  console.log('sleep cancelled')
+}
+
+// ...cancelled from outside
+controller.abort()
+
+// Combine with toAbortSignal() for a sleep with a maximum wait
+await duration.sleep({ signal: Duration.fromSeconds(30).toAbortSignal() })
 ```
 
 #### toAbortSignal()
@@ -577,7 +596,8 @@ import Duration, {
   type DurationLike,
   type TimeUnit,
   type DurationInput,
-  type ConversionOptions
+  type ConversionOptions,
+  type SleepOptions
 } from '@ggviana.eth/duration'
 ```
 
@@ -609,6 +629,9 @@ type DurationInput = number | string | Duration | Partial<DurationLike>
 
 // Options for unit conversion methods (toSeconds, toMinutes, etc.)
 type ConversionOptions = { exact?: boolean }
+
+// Options for sleep()
+type SleepOptions = { signal?: AbortSignal }
 ```
 
 ### Type Safety Examples
