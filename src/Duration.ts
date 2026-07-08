@@ -245,8 +245,9 @@ export default class Duration {
 
     let ms = 0
     for (const match of normalized.matchAll(/(\d+(?:\.\d+)?)\s*([a-z]+)/g)) {
-      const value = parseFloat(match[1] || '0')
-      const unit = match[2] || ''
+      // Both groups always match: the shape of the whole string was validated above
+      const value = parseFloat(match[1])
+      const unit = match[2]
       const unitValue = Duration.#HumanUnits[unit]
 
       if (!unitValue) {
