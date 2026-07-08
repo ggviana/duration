@@ -1386,6 +1386,89 @@ describe('Duration', () => {
           vi.useRealTimers()
         }
       })
+
+      it('should resolve normally when a signal is provided but never aborted', async () => {
+        vi.useFakeTimers()
+        try {
+          const controller = new AbortController()
+          const promise = Duration.fromSeconds(1).sleep({ signal: controller.signal })
+          await vi.advanceTimersByTimeAsync(1000)
+          await promise
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+
+      it('should reject when aborted before the duration elapses', async () => {
+        vi.useFakeTimers()
+        try {
+          const controller = new AbortController()
+          const promise = Duration.fromSeconds(2).sleep({ signal: controller.signal })
+          const assertion = expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+
+          await vi.advanceTimersByTimeAsync(500)
+          controller.abort()
+
+          await assertion
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+
+      it('should clear the pending timer when aborted', async () => {
+        vi.useFakeTimers()
+        try {
+          const controller = new AbortController()
+          const promise = Duration.fromSeconds(2).sleep({ signal: controller.signal })
+          expect(vi.getTimerCount()).toBe(1)
+
+          controller.abort()
+          await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+          expect(vi.getTimerCount()).toBe(0)
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+
+      it('should reject immediately when the signal is already aborted', async () => {
+        const controller = new AbortController()
+        controller.abort()
+
+        await expect(
+          Duration.fromMinutes(5).sleep({ signal: controller.signal })
+        ).rejects.toMatchObject({ name: 'AbortError' })
+      })
+
+      it('should reject with a custom abort reason', async () => {
+        vi.useFakeTimers()
+        try {
+          const controller = new AbortController()
+          const promise = Duration.fromSeconds(2).sleep({ signal: controller.signal })
+          const assertion = expect(promise).rejects.toThrow('user cancelled')
+
+          controller.abort(new Error('user cancelled'))
+
+          await assertion
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+
+      it('should ignore an abort that happens after the sleep completes', async () => {
+        vi.useFakeTimers()
+        try {
+          const controller = new AbortController()
+          const promise = Duration.fromSeconds(1).sleep({ signal: controller.signal })
+
+          await vi.advanceTimersByTimeAsync(1000)
+          await promise
+
+          controller.abort() // Must not cause an unhandled rejection
+          await promise
+        } finally {
+          vi.useRealTimers()
+        }
+      })
     })
 
     describe('toAbortSignal()', () => {
