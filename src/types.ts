@@ -34,3 +34,6 @@ export type DurationInput = number | string | Duration | Partial<DurationLike>
 
 // Options for unit conversion methods (toSeconds, toMinutes, etc.)
 export type ConversionOptions = { exact?: boolean }
+
+// Options for sleep()
+export type SleepOptions = { signal?: AbortSignal }
